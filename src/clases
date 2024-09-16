@@ -1,0 +1,153 @@
+
+# DEFINICION DE CLASES 
+class Memoria:
+    def __init__(self):
+        self.particiones =[
+            Particion(1,100, (Proceso (0,100,0,0))), # Suponiendo que se lee numero de proceso, tamaño,TA ,TI
+            Particion(2,250),
+            Particion(3,150),
+            Particion(4,50)
+        ]
+
+
+#Se define el procesos que utiliza la CPU
+class CPU:
+    def __init__(self):
+        self.proceso = None
+        
+    def eje_proceso(sel,proceso):
+        proceso.estado = "running"
+        self.proceso = proceso # type: ignore
+    
+    def liberar(self):
+        self.proceso = None
+
+#Definicion de las caracteríticas que tendrán las particiones 
+
+class Particion:
+    def __init__(self, np, tam, proceso = None):
+        self.np = np
+        self.tamanio = tam
+        self.proceso = proceso
+        self.fragamentacion = tam
+
+# Definicion de los procesos
+class Proceso:
+    def __init__(self, np, tam, ta, ti):
+        self.numero_proceso = np
+        self.tamaño = tam
+        self.estado = ""
+        self.tiempo_arribo = ta
+        self.tiempo_irrupcion = ti
+        self.tiempo_restante = ti
+        self.tiempo_retorno = 0
+        self.tiempo_espera = 0
+        
+class Simulo:
+    def __init__(self):
+        self.memoria = Memoria()
+        self.cpu = CPU()
+        self.reloj = 0
+        self.quantum = 0
+        self.lista_nuevos = []
+        self.cola_listo = []
+        self.cola_terminados = []
+        self.lista_procesos = self.carga_procesos() #Acá se encuentra la lista con los procesos
+        self.total_procesos = len(self.lista_procesos)
+        self.tiempo_retorno_total = 0
+        self.tiempo_esperda_total = 0
+    
+          
+     # Por ahora forma de cargar procesos de forma manual para probar que ande la cosa 
+     
+               
+    def carga_procesos(self):
+        cantidad_procesos = int(input('Ingrese el número de procesos: '))
+        if (cantidad_procesos > 0):
+            proceso = []
+            for number_p in range(cantidad_procesos):
+                arrival_tmp = -1
+                print(f'Proceso #{number_p + 1}')
+                while (arrival_tmp < 0):
+                    arrivo_tmp = int(
+                        input(f'Ingrese el tiempo de llegada del proceso #{number_p + 1}: '))
+
+                burst_tmp = 0
+                while (burst_tmp < 1):
+                    irrupcion_tmp = int(
+                        input(f'Ingrese el tiempo de irrupción del proceso #{number_p + 1}: '))
+                    
+                #id, burst, arrival
+                proceso.append(
+                    Proceso((number_p + 1), 0,  arrivo_tmp, irrupcion_tmp)) # Falta permitirle ingresar tamaño del proceso pero eso es para la siguiente parte
+                print(f' Fin de la carga de procesos')
+                print()
+                print()
+                print()
+                
+        return proceso
+    
+    
+    #Control de la múltiprogrmación de los procesos
+    def obtener_procesos(self, lista, reloj):
+        #Pasa los procesos de la lista general a una nueva lista de procesos nuevos que si podrán ser utilizados
+        lista_nuevos = [proc for proc in lista if proc.t_arribo <= reloj]
+        
+        # Control de duplicados
+        for proceso in lista_nuevos:
+            if (proceso in lista):
+                lista.remove(proceso)
+                proceso.estado = "new"
+                
+        return lista_nuevos
+    
+    #Incrementa el tiempo del reloj
+    def actualizar_reloj(self):
+        self.reloj += 1
+        
+    def simular(self):
+        # A la lista de nuevos se le cargan todos los proceso nuevos, utilizando la función extend, ponemos los procesos al final de la cola
+        self.lista_nuevos.extend(self.obtener_procesos(self.lista_procesos, self.reloj))
+        
+        proceso_actual = None
+
+        # Actualizamos la cola de listo
+        for proceso in self.lista_nuevos:
+            if (len(self.cola_listo) == 5):
+                break
+            self.cola_listo.append(proceso)
+        
+        # Asignamos a la variable proceso actual el valor del primer procesos en la cola de listo 
+        if (len(self.cola_listo) > 0 ):
+            proceso_actual = self.cola_listo[0]
+        
+        #Control del quantum
+        if (self.cpu.proceso != None):
+            self.quantum += 1
+            self.cpu.proceso.tiempo_restante -= 1
+            
+            #si el proceso termina, reinicia el quantum del proceso
+            if (self.cpu.proceso.tiempo_restante == 0):
+                self.cpu.proceso.estado = "exit"
+                self.cpu.proceso.tiempo_final = self.reloj
+                self.quantum = 0
+                
+                self.cola_listo.remove(self.cpu.proceso)
+                self.cola_terminados.append(self.cpu.proceso)
+                #Sacarlo de Memoria
+                
+                self.cpu.liberar()
+            
+            #Si el quantum llega a 3, se saca el proceso de la CPU y se pone en la cola de listos
+            elif (self.quantum == 3):
+                self.quantum = 0  
+                self.cpu.proceso.estado = "ready"
+                # Saca el proceso actual de la cola de listo y lo pone al final de la misma
+                self.cola_listo.remove(self.cpu.proceso)
+                self.cola_listo.append(self.cpu.proceso)
+                self.cpu.liberar()
+        
+    
+        #Cambiar estado de la CPU
+        if (self.cpu.proceso != proceso_actual and self.cpu.proceso is not None):    
+            self.cpu.eje_proceso(proceso_actual)
