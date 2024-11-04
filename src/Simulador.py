@@ -1,5 +1,6 @@
 from typing import Optional, List
 from tabulate import tabulate
+from Particion import Particion
 
 # Ejemplo de clase Proceso
 from Proceso import Proceso
@@ -13,11 +14,11 @@ class Simulador:
         self.ejecutando: Optional[Proceso] = None
 
         #Datos para la memoria
-        p1=
-        p2=
-        p3=
-        self.memoria_principal : List[Particiones]= [p1,p2,p3]
-        self.memoria_secundaria : List[Particiones] = []
+        p1= 250*1024 #KB * Byte
+        p2= 150*1024
+        p3= 50*1024
+        self.memoria_principal : List[Particion]= [p1,p2,p3]
+        self.memoria_secundaria : List[Particion] = []
         self.max_multiprogramacion: int = 5
 
         self.t: int = 0
