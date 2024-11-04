@@ -1,5 +1,6 @@
 
 # DEFINICION DE CLASES 
+print("nose")
 class Memoria:
     def __init__(self):
         self.particiones =[
