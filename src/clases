@@ -1,4 +1,4 @@
-from Particion import Particion
+import Particion from Particion
 
 
 # DEFINICION DE CLASES 
