@@ -1,10 +1,11 @@
+from Particion import Particion
+
 
 # DEFINICION DE CLASES 
-print("nose")
 class Memoria:
     def __init__(self):
         self.particiones =[
-            Particion(1,100, (Proceso (0,100,0,0))), # Suponiendo que se lee numero de proceso, tamaño,TA ,TI
+            Particion(1,100, (Proceso (0,0,0,100))), # Suponiendo que se lee numero de proceso,TA ,TI,Tamaño
             Particion(2,250),
             Particion(3,150),
             Particion(4,50)
@@ -22,28 +23,7 @@ class CPU:
     
     def liberar(self):
         self.proceso = None
-
-#Definicion de las caracteríticas que tendrán las particiones 
-
-class Particion:
-    def __init__(self, np, tam, proceso = None):
-        self.np = np
-        self.tamanio = tam
-        self.proceso = proceso
-        self.fragamentacion = tam
-
-# Definicion de los procesos
-class Proceso:
-    def __init__(self, np, tam, ta, ti):
-        self.numero_proceso = np
-        self.tamaño = tam
-        self.estado = ""
-        self.tiempo_arribo = ta
-        self.tiempo_irrupcion = ti
-        self.tiempo_restante = ti
-        self.tiempo_retorno = 0
-        self.tiempo_espera = 0
-        
+    
 class Simulo:
     def __init__(self):
         self.memoria = Memoria()
@@ -58,37 +38,7 @@ class Simulo:
         self.tiempo_retorno_total = 0
         self.tiempo_esperda_total = 0
     
-          
-     # Por ahora forma de cargar procesos de forma manual para probar que ande la cosa 
-     
-               
-    def carga_procesos(self):
-        cantidad_procesos = int(input('Ingrese el número de procesos: '))
-        if (cantidad_procesos > 0):
-            proceso = []
-            for number_p in range(cantidad_procesos):
-                arrival_tmp = -1
-                print(f'Proceso #{number_p + 1}')
-                while (arrival_tmp < 0):
-                    arrivo_tmp = int(
-                        input(f'Ingrese el tiempo de llegada del proceso #{number_p + 1}: '))
-
-                burst_tmp = 0
-                while (burst_tmp < 1):
-                    irrupcion_tmp = int(
-                        input(f'Ingrese el tiempo de irrupción del proceso #{number_p + 1}: '))
-                    
-                #id, burst, arrival
-                proceso.append(
-                    Proceso((number_p + 1), 0,  arrivo_tmp, irrupcion_tmp)) # Falta permitirle ingresar tamaño del proceso pero eso es para la siguiente parte
-                print(f' Fin de la carga de procesos')
-                print()
-                print()
-                print()
-                
-        return proceso
-    
-    
+              
     #Control de la múltiprogrmación de los procesos
     def obtener_procesos(self, lista, reloj):
         #Pasa los procesos de la lista general a una nueva lista de procesos nuevos que si podrán ser utilizados

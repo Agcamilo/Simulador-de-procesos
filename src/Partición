@@ -1,0 +1,23 @@
+from typing import Optional
+
+from Proceso import Proceso
+
+#Definicion de las caracteríticas que tendrán las particiones 
+class Particion:
+    #Utilizamos Optional para indicar que el proceso puede ser nulo
+    def __init__(self, np:int , tam_memo: int, proceso: Optional[Proceso] = None):
+        
+        self.np = np
+        self.tamanio = tam_memo
+        self.proceso = proceso
+    
+    def fragmetación_interna(self):
+        
+        if not self.proceso:
+            return 0
+        return self.tamanio - self.proceso.tamanio
+    
+    def clonar(self):
+        """Instancia otra Particion de su mismo tamaño."""
+        return Particion(self.memoria) 
+        
