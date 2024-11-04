@@ -21,7 +21,7 @@ class Simulador:
         self.max_multiprogramacion: int = 5
 
         self.t: int = 0
-        self.quantun: int = 0
+        self.quantum: int = 0
 
     def terminados(self) -> bool:
         return self.carga.terminada()
@@ -198,18 +198,18 @@ class Simulador:
 
         # Imprimir tabla de particiones de memoria
         print("\nTabla de memoria: (valores en bytes)")
-        for pos, part in enumerate(self.memoria_principal + self.memoria_secundaria, start=1):
-            mem_en_uso = part.proceso.memoria if part.proceso else 0
-            pid = f"P{part.proceso.id}" if part.proceso else "-"
-            presente = "Sí" if part.presente else "No"
-            frag_interna = part.fragmetacion_interna()
-            print(f"Partición {pos}:")
-            print(f"  Presente: {presente}")
-            print(f"  Proceso: {pid}")
-            print(f"  Dir. Inicio: {part.dir_inicio}")
-            print(f"  Tamaño: {part.memoria}")
-            print(f"  Mem. en uso: {mem_en_uso}")
-            print(f"  Fragamentacion. Interna: {frag_interna}")
+        #for pos, part in enumerate(self.memoria_principal + #self.memoria_secundaria, start=1):
+            #mem_en_uso = part.proceso.memoria if part.proceso else 0
+            #pid = f"P{part.proceso.id}" if part.proceso else "-"
+            #presente = "Sí" if part.presente else "No"
+            #frag_interna = part.fragmetacion_interna()
+            #print(f"Partición {pos}:")
+            #print(f"  Presente: {presente}")
+            #print(f"  Proceso: {pid}")
+            #print(f"  Dir. Inicio: {part.dir_inicio}")
+            #print(f"  Tamaño: {part.memoria}")
+            ##print(f"  Mem. en uso: {mem_en_uso}")
+            #print(f"  Fragamentacion. Interna: {frag_interna}")
 
         # Imprimir carga de trabajo
         print(f"\nCarga de trabajo: (grado de multiprogramación = {self.grado_multiprogramacion()})")
