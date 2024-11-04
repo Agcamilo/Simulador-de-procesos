@@ -11,6 +11,7 @@ def abrir_archivo():
     if archivo:
         print(f"Archivo seleccionado: {archivo}")
         CargaProcesos = CargaTrabajo(archivo)
+        print(CargaProcesos)
     else:
         print("No se seleccionó ningún archivo.")
 
@@ -32,3 +33,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()
     menu()
+    

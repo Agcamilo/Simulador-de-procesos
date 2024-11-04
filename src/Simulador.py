@@ -1,8 +1,6 @@
 from typing import Optional, List
 from tabulate import tabulate
 from Particion import Particion
-
-# Ejemplo de clase Proceso
 from Proceso import Proceso
 
 class Simulador:
@@ -38,7 +36,7 @@ class Simulador:
     
     def procesos_nuevos(self) -> List[Proceso]:
         #Retorna una lista con los procesos que llegan en el tiempo actual
-        return list(filter(lambda p: p.t_arribo <= self.t and p.estado == "Nuevo", self.carga_trabajo.procesos))
+        return list(filter(lambda p: p.tiempo_arribo <= self.t and p.estado == "Nuevo", self.carga_trabajo.procesos))
     
     def encontrar_particion(self, proceso: Proceso) -> Optional[Particion]:
         # Retorna una partición de memoria ocupada o libre para el proceso según el algoritmo worst-fit.
@@ -83,7 +81,7 @@ class Simulador:
         victima = self.encontrar_particion_victima(part)
         if victima.proceso:
             # Si hay un proceso en la partición víctima, se hace un swap out.
-            victima.proceso.estado = "ListoSupendido"
+            victima.proceso.estado = "Listo y Supendido"
             victima.presente = False
             self.memoria_secundaria.append(victima)
         
@@ -105,7 +103,7 @@ class Simulador:
             if part_ocupada is None:
                 #El proceso no entra en ninguna particion, se lo denega para siempre
                 print(f"Proceso {proceso.id} no entra en ninguna particion")
-                proceso.estado = "Denegado"
+                proceso.estado = "Incorrecto"
                 return 
             
         else:
@@ -122,7 +120,7 @@ class Simulador:
         self.quantum = 0
     
     def expropiar_proceso(self):
-        #Expropia el proceso en ejecución en la CPU y lo envía a la cola de listos.
+        #Expropia el proceso en ejecución en la CPU y lo manda a la cola de listos.
         self.cola_listos.append(self.ejecutando)
         self.ejecutando.estado = "Listo"
         self.ejecutando = None

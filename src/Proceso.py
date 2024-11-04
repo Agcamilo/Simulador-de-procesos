@@ -10,9 +10,9 @@ d1 = dict (
 
 
 class Proceso:
-    def __init__(self, np: int , tam_memo: int , ta:int , ti:int):
-        self.numero_proceso = np
-        self.tamaño = tam_memo
+    def __init__(self, id: int , memoria: int , ta:int , ti:int):
+        self.id = id
+        self.memoria = memoria
         self.estado = d1["NUEVO"]
         self.tiempo_arribo = ta
         self.tiempo_irrupcion = ti
