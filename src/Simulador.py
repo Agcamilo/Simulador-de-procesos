@@ -2,11 +2,12 @@ from typing import Optional, List
 from tabulate import tabulate
 from Particion import Particion
 from Proceso import Proceso
+from CargarProcesos import CargaTrabajo
 
 class Simulador:
     #Representa la simulacion.
 
-    def __init__(self, carga):
+    def __init__(self, carga: CargaTrabajo):
         self.carga = carga
         self.cola_listos: List[Proceso] = []
         self.ejecutando: Optional[Proceso] = None
@@ -23,7 +24,7 @@ class Simulador:
         self.quantun: int = 0
 
     def terminados(self) -> bool:
-        return self.carga.terminados()
+        return self.carga.terminada()
     
     def grado_multiprogramacion(self) -> int:
         #etorna la cantidad de procesos alojados en memoria principal y virtual
@@ -36,12 +37,12 @@ class Simulador:
     
     def procesos_nuevos(self) -> List[Proceso]:
         #Retorna una lista con los procesos que llegan en el tiempo actual
-        return list(filter(lambda p: p.tiempo_arribo <= self.t and p.estado == "Nuevo", self.carga_trabajo.procesos))
+        return list(filter(lambda p: p.tiempo_arribo <= self.t and p.estado == "Nuevo", self.carga.procesos))
     
     def encontrar_particion(self, proceso: Proceso) -> Optional[Particion]:
         # Retorna una partición de memoria ocupada o libre para el proceso según el algoritmo worst-fit.
         peor_part: Optional[Particion] = None
-        for part in self.mem_principal:
+        for part in self.memoria_principal:
             if part.memoria >= proceso.memoria:
                 if peor_part is None or part.memoria > peor_part.memoria:
                     peor_part = part
@@ -52,7 +53,7 @@ class Simulador:
         #Retorna una partición de memoria libre para el proceso según el algoritmo worst-fit.
         peor_part: Optional[Particion] = None
     
-        for part in self.mem_principal:
+        for part in self.memoria_principal:
             if part.proceso is None and part.memoria >= proceso.memoria:
                 if peor_part is None or part.memoria > peor_part.memoria:
                     peor_part = part
@@ -61,13 +62,13 @@ class Simulador:
     
     def encontrar_particion_proceso(self, proceso: Proceso) -> Optional[Particion]:
         #Retorna la partición que está asignada al proceso pasado por parámetro.
-        for part in self.mem_principal + self.mem_virtual:
+        for part in self.memoria_principal + self.memoria_secundaria:
             if part.proceso == proceso:
                 return part
             
     def encontrar_particion_victima(self, particion: Particion) -> Optional[Particion]:
         #Retorna la partición en memoria principal que debería reemplazarse por la partición ausente.
-        for part in self.mem_principal:
+        for part in self.memoria_principal:
             if part.dir_inicio == particion.dir_inicio:
                 return part
             
@@ -85,8 +86,8 @@ class Simulador:
             victima.presente = False
             self.memoria_secundaria.append(victima)
         
-        index = self.mem_principal.index(victima)
-        self.mem_principal[index] = part
+        index = self.memoria_principal.index(victima)
+        self.memoria_principal[index] = part
         #Se actualiza la partición en memoria principal.
 
     def admitir_proceso(self, proceso: Proceso):
@@ -161,14 +162,14 @@ class Simulador:
         #Planifica el uso de la CPU usando un Round Robin con quantum = 3
         # Se notifica a los procesos en LISTO y LISTOSUSPENDIDO que siguen esperando la CPU.
         for proceso in self.cola_listos:
-            proceso.tick_listo()
+            proceso.proceso_listo()
 
         if self.ejecutando:
             # Se notifica al proceso en EJECUTANDO que avanzó otro instante de tiempo.
-            self.ejecutando.tick_ejecutando()
+            self.ejecutando.proceso_ejecutando()
 
             if self.ejecutando.terminado():
-                self.terminar_proceso()
+                self.terminar_procesos()
                 self.asignar_cpu()
             elif self.quantum == 3:
                 self.expropiar_proceso()
@@ -197,22 +198,22 @@ class Simulador:
 
         # Imprimir tabla de particiones de memoria
         print("\nTabla de memoria: (valores en bytes)")
-        for pos, part in enumerate(self.mem_principal + self.mem_virtual, start=1):
+        for pos, part in enumerate(self.memoria_principal + self.memoria_secundaria, start=1):
             mem_en_uso = part.proceso.memoria if part.proceso else 0
             pid = f"P{part.proceso.id}" if part.proceso else "-"
             presente = "Sí" if part.presente else "No"
-            frag_interna = part.frag_interna()
+            frag_interna = part.fragmetacion_interna()
             print(f"Partición {pos}:")
             print(f"  Presente: {presente}")
             print(f"  Proceso: {pid}")
             print(f"  Dir. Inicio: {part.dir_inicio}")
             print(f"  Tamaño: {part.memoria}")
             print(f"  Mem. en uso: {mem_en_uso}")
-            print(f"  Frag. Interna: {frag_interna}")
+            print(f"  Fragamentacion. Interna: {frag_interna}")
 
         # Imprimir carga de trabajo
         print(f"\nCarga de trabajo: (grado de multiprogramación = {self.grado_multiprogramacion()})")
-        print(self.carga_trabajo)
+        print(self.carga)
 
 
 

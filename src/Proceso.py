@@ -33,3 +33,7 @@ class Proceso:
     def mostrar_progreso (self):
         # Muestra el progreso del proceso en la CPU
         return self.tiempo_ejecutando / self.tiempo_irrupcion * 100
+    
+    def terminado(self) -> bool:
+        #Retorna True si el proceso cumplió su tiempo de irrupción y por ende terminó su tarea.
+        return self.t_irrup - self.progreso <= 0
