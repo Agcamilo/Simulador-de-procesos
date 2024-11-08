@@ -10,7 +10,7 @@ d1 = dict (
 
 
 class Proceso:
-    def __init__(self, id: int , memoria: int , ta:int , ti:int):
+    def __init__(self, id: int, ta:int , ti:int,memoria: int):
         self.id = id
         self.memoria = memoria
         self.estado = d1["NUEVO"]
@@ -36,4 +36,7 @@ class Proceso:
     
     def terminado(self) -> bool:
         #Retorna True si el proceso cumplió su tiempo de irrupción y por ende terminó su tarea.
-        return self.t_irrup - self.progreso <= 0
+        return self.tiempo_irrupcion - self.tiempo_ejecutando <= 0
+    
+    def __repr__(self):
+        return f"Proceso({self.id}, {self.tiempo_arribo}, {self.tiempo_irrupcion}, {self.memoria}, {self.estado}, {self.tiempo_ejecutando})"

@@ -5,7 +5,7 @@ from Proceso import Proceso
 #Definicion de las caracteríticas que tendrán las particiones 
 class Particion:
     #Utilizamos Optional para indicar que el proceso puede ser nulo
-    def __init__(self, dir_inicio:int, id:int , memoria: int, proceso: Optional[Proceso] = None):
+    def __init__(self, dir_inicio:int, memoria: int, proceso: Optional[Proceso] = None):
         self.dir_inicio = dir_inicio
         self.id = id
         self.memoria = memoria
@@ -20,5 +20,8 @@ class Particion:
     
     def clonar(self):
         """Instancia otra Particion de su mismo tamaño."""
-        return Particion(self.memoria) 
+        return Particion(self.dir_inicio, self.memoria) 
+    
+    def __repr__(self):
+        return f"Particion({self.dir_inicio}, {self.memoria}, {self.presente}, {self.proceso})"
         

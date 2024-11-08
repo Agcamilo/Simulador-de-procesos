@@ -4,6 +4,11 @@ from Particion import Particion
 from Proceso import Proceso
 from CargarProcesos import CargaTrabajo
 
+# Define la función kb_a_bytes
+def kb_a_bytes(kilobytes: int) -> int:
+    return kilobytes * 1024
+
+
 class Simulador:
     #Representa la simulacion.
 
@@ -13,9 +18,9 @@ class Simulador:
         self.ejecutando: Optional[Proceso] = None
 
         #Datos para la memoria
-        p1= 250*1024 #KB * Byte
-        p2= 150*1024
-        p3= 50*1024
+        p1 = Particion(kb_a_bytes(100), kb_a_bytes(250))
+        p2 = Particion(p1.dir_inicio + p1.memoria, kb_a_bytes(150))
+        p3 = Particion(p2.dir_inicio + p2.memoria, kb_a_bytes(50))
         self.memoria_principal : List[Particion]= [p1,p2,p3]
         self.memoria_secundaria : List[Particion] = []
         self.max_multiprogramacion: int = 5
@@ -27,7 +32,7 @@ class Simulador:
         return self.carga.terminada()
     
     def grado_multiprogramacion(self) -> int:
-        #etorna la cantidad de procesos alojados en memoria principal y virtual
+        #Retorna la cantidad de procesos alojados en memoria principal y virtual
         ejecutando = 1 if self.ejecutando else 0 #ejecutando
         return ejecutando + len(self.cola_listos) #
 
@@ -198,18 +203,18 @@ class Simulador:
 
         # Imprimir tabla de particiones de memoria
         print("\nTabla de memoria: (valores en bytes)")
-        #for pos, part in enumerate(self.memoria_principal + #self.memoria_secundaria, start=1):
-            #mem_en_uso = part.proceso.memoria if part.proceso else 0
-            #pid = f"P{part.proceso.id}" if part.proceso else "-"
-            #presente = "Sí" if part.presente else "No"
-            #frag_interna = part.fragmetacion_interna()
-            #print(f"Partición {pos}:")
-            #print(f"  Presente: {presente}")
-            #print(f"  Proceso: {pid}")
-            #print(f"  Dir. Inicio: {part.dir_inicio}")
-            #print(f"  Tamaño: {part.memoria}")
-            ##print(f"  Mem. en uso: {mem_en_uso}")
-            #print(f"  Fragamentacion. Interna: {frag_interna}")
+        for pos, part in enumerate(self.memoria_principal + self.memoria_secundaria, start=1):
+            mem_en_uso = part.proceso.memoria if part.proceso else 0
+            pid = f"P{part.proceso.id}" if part.proceso else "-"
+            presente = "Sí" if part.presente else "No"
+            frag_interna = part.fragmetacion_interna()
+            print(f"Partición {pos}:")
+            print(f"  Presente: {presente}")
+            print(f"  Proceso: {pid}")
+            print(f"  Dir. Inicio: {part.dir_inicio}")
+            print(f"  Tamaño: {part.memoria}")
+            print(f"  Mem. en uso: {mem_en_uso}")
+            print(f"  Fragamentacion. Interna: {frag_interna}")
 
         # Imprimir carga de trabajo
         print(f"\nCarga de trabajo: (grado de multiprogramación = {self.grado_multiprogramacion()})")
