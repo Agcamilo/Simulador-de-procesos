@@ -3,7 +3,7 @@ from tabulate import tabulate
 from Particion import Particion
 from Proceso import Proceso
 from CargarProcesos import CargaTrabajo
-
+from Proceso import d1
 # Define la función kb_a_bytes
 def kb_a_bytes(kilobytes: int) -> int:
     return kilobytes * 1024
@@ -18,7 +18,8 @@ class Simulador:
         self.ejecutando: Optional[Proceso] = None
 
         #Datos para la memoria
-        p1 = Particion(kb_a_bytes(100), kb_a_bytes(250))
+        p0 = Particion(0, kb_a_bytes(100))
+        p1 = Particion(p0.dir_inicio + p0.memoria, kb_a_bytes(250))
         p2 = Particion(p1.dir_inicio + p1.memoria, kb_a_bytes(150))
         p3 = Particion(p2.dir_inicio + p2.memoria, kb_a_bytes(50))
         self.memoria_principal : List[Particion]= [p1,p2,p3]
@@ -42,7 +43,7 @@ class Simulador:
     
     def procesos_nuevos(self) -> List[Proceso]:
         #Retorna una lista con los procesos que llegan en el tiempo actual
-        return list(filter(lambda p: p.tiempo_arribo <= self.t and p.estado == "Nuevo", self.carga.procesos))
+        return list(filter(lambda p: p.tiempo_arribo <= self.t and p.estado == d1["NUEVO"], self.carga.procesos)) #
     
     def encontrar_particion(self, proceso: Proceso) -> Optional[Particion]:
         # Retorna una partición de memoria ocupada o libre para el proceso según el algoritmo worst-fit.
@@ -87,7 +88,7 @@ class Simulador:
         victima = self.encontrar_particion_victima(part)
         if victima.proceso:
             # Si hay un proceso en la partición víctima, se hace un swap out.
-            victima.proceso.estado = "Listo y Supendido"
+            victima.proceso.estado = d1["LYS"]	
             victima.presente = False
             self.memoria_secundaria.append(victima)
         
@@ -100,7 +101,7 @@ class Simulador:
         part = self.encontrar_particion_libre(proceso)
         if part and part.presente:
             part.proceso = proceso
-            proceso.estado = "Listo"
+            proceso.estado = d1["LISTO"]	
             self.cola_listos.append(proceso)
             return  
 
@@ -109,36 +110,49 @@ class Simulador:
             if part_ocupada is None:
                 #El proceso no entra en ninguna particion, se lo denega para siempre
                 print(f"Proceso {proceso.id} no entra en ninguna particion")
-                proceso.estado = "Incorrecto"
+                proceso.estado = d1["INCORRECTO"]
                 return 
             
+            proceso.estado = d1["LYS"]
+            self.cola_listos.append(proceso)
         else:
             #Rechazar proceso, volvera a internar en el siguiente instante de tiempo
             print(f"Proceso {proceso.id} rechazado por falta de espacio")
 
         
     def terminar_procesos(self):
-        #Termina el proceso en ejecución en la CPU y libera su partición de memoria asignada.
+        # Verifica que hay un proceso en ejecución
+        if self.ejecutando is None:
+            print("No hay proceso en ejecución.")
+            return
+    
+        # Termina el proceso en ejecución en la CPU y libera su partición de memoria asignada.
         part = self.encontrar_particion_proceso(self.ejecutando)
+        
+        # Verifica que se encontró una partición
+        if part is None:
+            print("No se encontró la partición del proceso en ejecución.")
+            return
+    
         part.proceso = None
-        self.ejecutando.estado = "Terminado"
+        self.ejecutando.estado = d1["TERMINADO"]
         self.ejecutando = None
         self.quantum = 0
     
     def expropiar_proceso(self):
         #Expropia el proceso en ejecución en la CPU y lo manda a la cola de listos.
         self.cola_listos.append(self.ejecutando)
-        self.ejecutando.estado = "Listo"
+        self.ejecutando.estado = d1["LISTO"]
         self.ejecutando = None
 
     def activar_proceso(self, proceso:Proceso):
         #Activa un proceso en la CPU y lo asigna a una partición de memoria.
         part = self.encontrar_particion_libre(proceso)
         if part is None:
-            part = self.encontrar_particion_libre(proceso)
+            part = self.encontrar_particion_libre(proceso) 
             if part and part.presente:
                 part.proceso = proceso
-                proceso.estado = "Listo"
+                proceso.estado = d1["LISTO"]
                 return  
             
             #Se le asigna una ya ocupada y se hace swap out a la victima
@@ -147,7 +161,8 @@ class Simulador:
             part= part_ocupada.clonar() #Se clona la particion ocupada
             part.proceso = proceso
             self.memoria_secundaria.append(part)
-            proceso.estado = "Listo"
+            self.swap_in_particion(part)
+            proceso.estado = d1["LISTO"]
 
         if not part.presente:
             #Proceso estraba suspendido, se lo trae a MP
@@ -161,7 +176,7 @@ class Simulador:
             self.ejecutando = self.cola_listos[0]
             self.activar_proceso(self.ejecutando)
             self.cola_listos.remove(self.ejecutando)
-            self.ejecutando.estado = "Ejecutando"
+            self.ejecutando.estado = d1["EJECUTANDO"]
 
     def planificar_cpu(self):
         #Planifica el uso de la CPU usando un Round Robin con quantum = 3
