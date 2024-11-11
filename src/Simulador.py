@@ -125,16 +125,11 @@ class Simulador:
         if self.ejecutando is None:
             print("No hay proceso en ejecución.")
             return
-    
         # Termina el proceso en ejecución en la CPU y libera su partición de memoria asignada.
         part = self.encontrar_particion_proceso(self.ejecutando)
         
-        # Verifica que se encontró una partición
-        if part is None:
-            print("No se encontró la partición del proceso en ejecución.")
-            return
-    
-        part.proceso = None
+        if part is not None:  # Asegúrate de que `part` no sea None
+            part.proceso = None
         self.ejecutando.estado = d1["TERMINADO"]
         self.ejecutando = None
         self.quantum = 0
