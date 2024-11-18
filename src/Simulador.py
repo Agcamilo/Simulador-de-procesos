@@ -27,7 +27,7 @@ class Simulador:
         p3 = Particion(p2.dir_inicio + p2.memoria, kb_a_bytes(50))
         self.memoria_principal: List[Particion] = [p1, p2, p3]
         self.memoria_secundaria: List[Particion] = []
-        self.max_multiprogramacion: int = 3
+        
 
         self.t: int = 0
         self.quantum: int = 0
@@ -198,3 +198,20 @@ class Simulador:
         # Imprimir carga de trabajo
         print(f"\nCarga de trabajo: (grado de multiprogramación = {self.grado_multiprogramacion()})")
         print(self.carga)
+    
+    def reporte_grafico(self):
+        #Genera un reporte gráfico del estado del simulador.
+        tiempo_espera_promedio = 0
+        tiempo_retorno_promedio = 0
+        for p in self.carga.procesos:
+            print("tiempo de retorno del proceso",p.id,":", p.tiempo_retorno)      
+            print("tiempo de espera del proceso",p.id,":", p.tiempo_espera)
+            print("----------------------------------------------------------------")
+            tiempo_espera_promedio += p.tiempo_espera
+            tiempo_retorno_promedio += p.tiempo_retorno
+            
+        print("RESULTADOS PROMEDIOS:")
+        print("tiempo de espera promedio es:", tiempo_espera_promedio/len(self.carga.procesos))
+        print("tiempo de retorno promedio es:", tiempo_retorno_promedio/len(self.carga.procesos))
+
+        print("Rendimiento del simulador:",(len(self.carga.procesos)/self.t))
