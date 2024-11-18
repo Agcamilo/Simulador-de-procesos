@@ -1,125 +1,126 @@
 import os
 import tkinter as tk
 from tkinter import filedialog
+import pygame
 from CargarProcesos import CargaTrabajo
 from Simulador import Simulador
-import pygame
 
-# Inicializar Pygame
+# Inicializar PyGame
 pygame.init()
 
 # Dimensiones de la ventana
-WIDTH, HEIGHT = 1024, 768
+WIDTH, HEIGHT = 1200, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Simulador de Sistema Operativo")
+pygame.display.set_caption("Simulador de Memoria")
 
 # Colores
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
+GRAY = (200, 200, 200)
 RED = (255, 0, 0)
-BLUE = (0, 0, 255)
 
 # Fuentes
 font = pygame.font.Font(None, 24)
 title_font = pygame.font.Font(None, 32)
+
+
+def progreso(porcentaje: float) -> str:
+    """Muestra el progreso de un proceso mediante una barra de progreso."""
+    cantidad = int((15 * porcentaje / 100))
+    return f"{'█' * cantidad}{'_' * (15 - cantidad)} {round(porcentaje, 1)}%"
+
 
 def abrir_archivo():
     """Abrir archivo de configuración de procesos usando Tkinter."""
     ubicacion_inicial = os.path.join(os.getcwd(), "./Archivos")
     archivo = filedialog.askopenfilename(initialdir=ubicacion_inicial, title="Seleccionar archivo")
     if archivo:
+        print(f"Archivo seleccionado: {archivo}")
         carga_procesos = CargaTrabajo(archivo)
         return carga_procesos
     else:
         print("No se seleccionó ningún archivo.")
         return None
 
+
 def dibujar_estado(simulador):
     """Dibuja el estado actual del simulador en la pantalla."""
     screen.fill(WHITE)
 
     # Título principal
-    title = title_font.render("Simulador de Sistema Operativo", True, BLACK)
+    title = title_font.render("Simulador de Memoria", True, BLACK)
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
 
     # Memoria principal
     pygame.draw.rect(screen, BLACK, (50, 50, 300, 300), 2)
     mem_title = font.render("Memoria Principal", True, BLACK)
-    screen.blit(mem_title, (150, 30))
+    screen.blit(mem_title, (140, 30))
 
     y_offset = 60
     for idx, part in enumerate(simulador.memoria_principal):
-        color = RED if part.proceso else GREEN
+        color = GREEN if part.proceso else GRAY
         pygame.draw.rect(screen, color, (60, y_offset + idx * 40, 280, 30))
-        text = font.render(
-            f"Partición {idx + 1}: {'P' + str(part.proceso.id) if part.proceso else 'Libre'}",
+        pid_text = font.render(
+            f"P{part.proceso.id}" if part.proceso else "Libre",
             True, BLACK,
         )
-        screen.blit(text, (70, y_offset + idx * 40 + 5))
         frag_text = font.render(
-            f"Frag. Interna: {part.fragmetacion_interna()} bytes",
-            True, BLACK,
+            f"Frag. Interna: {part.fragmetacion_interna()}",
+            True, RED if part.proceso else BLACK,
         )
+        screen.blit(pid_text, (70, y_offset + idx * 40 + 5))
         screen.blit(frag_text, (70, y_offset + idx * 40 + 20))
 
-    # Memoria secundaria
-    pygame.draw.rect(screen, BLACK, (400, 50, 300, 300), 2)
-    mem_sec_title = font.render("Memoria Secundaria", True, BLACK)
-    screen.blit(mem_sec_title, (480, 30))
-
-    y_offset = 60
-    for idx, part in enumerate(simulador.memoria_secundaria):
-        color = RED if part.proceso else GREEN
-        pygame.draw.rect(screen, color, (410, y_offset + idx * 40, 280, 30))
-        text = font.render(
-            f"Partición {idx + 1}: {'P' + str(part.proceso.id) if part.proceso else 'Libre'}",
-            True, BLACK,
-        )
-        screen.blit(text, (420, y_offset + idx * 40 + 5))
-        frag_text = font.render(
-            f"Frag. Interna: {part.fragmetacion_interna()} bytes",
-            True, BLACK,
-        )
-        screen.blit(frag_text, (420, y_offset + idx * 40 + 20))
-
-    # Cola de listos
-    pygame.draw.rect(screen, BLACK, (50, 400, 300, 200), 2)
-    cola_title = font.render("Cola de Listos", True, BLACK)
-    screen.blit(cola_title, (150, 380))
-
-    y_offset = 410
-    if simulador.cola_listos:
-        for idx, proceso in enumerate(simulador.cola_listos):
-            text = font.render(f"P{proceso.id} (Tamaño: {proceso.memoria})", True, BLACK)
-            screen.blit(text, (60, y_offset + idx * 30))
-    else:
-        text = font.render("Cola Vacía", True, BLACK)
-        screen.blit(text, (60, y_offset + 5))
-
-    # Proceso en ejecución
-    pygame.draw.rect(screen, BLACK, (400, 400, 300, 80), 2)
-    ejec_title = font.render("CPU en Ejecución", True, BLACK)
-    screen.blit(ejec_title, (480, 380))
+    # Proceso en CPU
+    pygame.draw.rect(screen, BLACK, (400, 50, 200, 100), 2)
+    cpu_title = font.render("CPU", True, BLACK)
+    screen.blit(cpu_title, (470, 30))
 
     if simulador.ejecutando:
-        ejec_text = font.render(f"P{simulador.ejecutando.id} (Tamaño: {simulador.ejecutando.memoria})", True, BLACK)
+        proceso_cpu = simulador.ejecutando
+        proceso_cpu_text = font.render(
+            f"P{proceso_cpu.id} - {progreso(proceso_cpu.mostrar_progreso())}",
+            True, BLACK,
+        )
+        screen.blit(proceso_cpu_text, (420, 60))  # Ajusta la posición si es necesario
     else:
-        ejec_text = font.render("Ningún proceso en ejecución", True, BLACK)
-    screen.blit(ejec_text, (410, 420))
+        no_proceso_text = font.render(
+            "No hay proceso en la CPU", True, BLACK
+        )
+        screen.blit(no_proceso_text, (420, 60))
+
+    # Cola de listos
+    pygame.draw.rect(screen, BLACK, (650, 50, 300, 150), 2)
+    listos_title = font.render("Cola de Listos", True, BLACK)
+    screen.blit(listos_title, (750, 30))
+
+    y_offset = 60
+    for idx, proceso in enumerate(simulador.cola_listos):
+        listos_text = font.render(
+            f"P{proceso.id} - {progreso(proceso.mostrar_progreso())}",
+            True, BLACK,
+        )
+        screen.blit(listos_text, (660, y_offset + idx * 30))
+
+    # Cola de suspendidos
+    pygame.draw.rect(screen, BLACK, (50, 400, 300, 150), 2)
+    suspendidos_title = font.render("Cola de Suspendidos", True, BLACK)
+    screen.blit(suspendidos_title, (110, 380))
+
+    y_offset = 410
+    for idx, proceso in enumerate(simulador.cola_suspendidos):
+        suspendidos_text = font.render(f"P{proceso.id}", True, BLACK)
+        screen.blit(suspendidos_text, (60, y_offset + idx * 30))
 
     # Información general
-    pygame.draw.rect(screen, BLACK, (50, 620, 700, 100), 2)
-    info_title = font.render("Información General", True, BLACK)
-    screen.blit(info_title, (330, 600))
-
     info_text = font.render(f"Tiempo: {simulador.t} | Quantum: {simulador.quantum}", True, BLACK)
-    screen.blit(info_text, (60, 640))
-
-    carga_text = font.render(f"Grado de multiprogramación: {simulador.grado_multiprogramacion()}", True, BLACK)
-    screen.blit(carga_text, (60, 670))
+    screen.blit(info_text, (50, 600))
 
     pygame.display.flip()
+
+
+
 
 def main():
     # Crear ventana de Tkinter pero sin mostrarla
@@ -157,6 +158,7 @@ def main():
             running = False
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
