@@ -5,7 +5,8 @@ d1 = dict (
   LISTO= "Listo",
   EJECUTANDO = "Ejecutando",
   TERMINADO = "Terminado",
-  INCORRECTO = "Incorrecto"
+  INCORRECTO = "Incorrecto",
+  SUSPENDIDO = "Suspendido"
 )
 
 

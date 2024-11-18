@@ -17,6 +17,7 @@ class Simulador:
         """Inicializa un Simulador con una CargaTrabajo y una List[Particion] (memoria)."""
         self.carga = carga
         self.cola_listos: List[Proceso] = []
+        self.cola_suspendidos: List[Proceso] = []
         self.ejecutando: Optional[Proceso] = None
 
         # Estructuras de datos para la memoria.
@@ -36,11 +37,11 @@ class Simulador:
 
     def grado_multiprogramacion(self) -> int:
         """Retorna la cantidad de procesos alojados en memoria principal."""
-        return len([part for part in self.memoria_principal if part.proceso is not None])
+        return len([part for part in self.memoria_principal if part.proceso is not None] ) + len([part for part in self.memoria_secundaria if part.proceso is not None])
 
     def mem_principal_disponible(self) -> bool:
         """Retorna True si hay espacio disponible en memoria principal."""
-        return self.grado_multiprogramacion() < self.max_multiprogramacion
+        return len([part for part in self.memoria_principal if part.proceso is not None] )  < 3
 
     def procesos_nuevos(self) -> List[Proceso]:
         """Retorna una lista con los procesos que llegan en el tiempo actual."""
@@ -62,32 +63,45 @@ class Simulador:
                 return part
 
     def swap_in_particion(self):
-        """Trae una partición ausente en memoria virtual a la memoria principal cuando un proceso termina."""
+    #Mueve un proceso desde memoria secundaria a memoria principal.
         if self.memoria_secundaria:
-            particion = self.memoria_secundaria.pop(0)
-            particion.presente = True
-            for part in self.memoria_principal:
-                if part.proceso is None:
-                    index = self.memoria_principal.index(part)
-                    self.memoria_principal[index] = particion
-                    break
+            for part_secundaria in self.memoria_secundaria:
+                if self.mem_principal_disponible():
+                    for part_principal in self.memoria_principal:
+                        if part_principal.proceso is None:
+                            part_principal.proceso = part_secundaria.proceso
+                            part_principal.proceso.estado = d1["LISTO"]
+                            self.cola_suspendidos.remove(part_secundaria.proceso)
+                            self.cola_listos.append(part_principal.proceso)
+                            self.memoria_secundaria.remove(part_secundaria)
+                            print(f"Proceso {part_principal.proceso.id} movido de memoria secundaria a principal.")
+                            break
 
     def admitir_proceso(self, proceso: Proceso):
-        """Asigna una partición de memoria principal al proceso, o lo rechaza si no hay disponibles."""
+        """Asigna una partición de memoria principal o secundaria al proceso."""
         if self.mem_principal_disponible():
             part = self.encontrar_particion_libre(proceso)
             if part:
                 part.proceso = proceso
                 proceso.estado = d1["LISTO"]
                 self.cola_listos.append(proceso)
+                print(f"Proceso {proceso.id} admitido en memoria principal.")
             else:
-                print(f"Proceso {proceso.id} no entra en ninguna partición")
+                print(f"Proceso {proceso.id} no entra en ninguna partición.")
                 proceso.estado = d1["INCORRECTO"]
+        elif len(self.memoria_secundaria) < 2:
+            # Si hay espacio en memoria secundaria, mover el proceso allí
+            nueva_particion = Particion(0, proceso.memoria)
+            nueva_particion.proceso = proceso
+            proceso.estado = d1["SUSPENDIDO"]
+            self.memoria_secundaria.append(nueva_particion)
+            self.cola_suspendidos.append(proceso)
+            print(f"Proceso {proceso.id} admitido en memoria secundaria.")
         else:
-            print(f"Proceso {proceso.id} rechazado por falta de espacio en memoria principal")
+            print(f"Proceso {proceso.id} rechazado por falta de espacio en memoria.")
 
     def terminar_procesos(self):
-        """Termina el proceso en ejecución en la CPU y libera su partición de memoria asignada."""
+        """Libera memoria principal y mueve un proceso de memoria secundaria."""
         if self.ejecutando is None:
             print("No hay proceso en ejecución.")
             return
@@ -96,6 +110,7 @@ class Simulador:
         if part is not None:
             part.proceso = None
         self.ejecutando.estado = d1["TERMINADO"]
+        print(f"Proceso {self.ejecutando.id} terminado y liberado de memoria principal.")
         self.ejecutando = None
         self.quantum = 0
 
@@ -158,6 +173,10 @@ class Simulador:
         else:
             print("Cola de listos: (vacía)")
 
+        if len(self.cola_suspendidos) != 0:
+            print("Cola de suspendidos:")
+            for pid in self.cola_suspendidos:
+                print(f"  Proceso: P{pid.id} ({pid.estado})")
         print(f"Tiempo: {self.t}")
         print(f"Quantum: {self.quantum}")
 
