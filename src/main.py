@@ -68,6 +68,7 @@ if __name__ == "__main__":
         simulador.mostrar_estado()
         input_avanzar("Presione Enter para avanzar o q + Enter para salir...")
 
+    simulador.reporte_grafico()
     print("\n================ ¡Simulación terminada! ================")
     
     
