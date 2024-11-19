@@ -19,6 +19,7 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 GRAY = (200, 200, 200)
 RED = (255, 0, 0)
+BLUE = (0, 0, 255)
 
 # Fuentes
 font = pygame.font.Font(None, 24)
@@ -33,6 +34,8 @@ def progreso(porcentaje: float) -> str:
 
 def abrir_archivo():
     """Abrir archivo de configuración de procesos usando Tkinter."""
+    root = tk.Tk()
+    root.withdraw()  # Ocultar la ventana principal de Tkinter
     ubicacion_inicial = os.path.join(os.getcwd(), "./Archivos")
     archivo = filedialog.askopenfilename(initialdir=ubicacion_inicial, title="Seleccionar archivo")
     if archivo:
@@ -53,14 +56,20 @@ def dibujar_estado(simulador):
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
 
     # Memoria principal
-    pygame.draw.rect(screen, BLACK, (50, 50, 300, 300), 2)
+    pygame.draw.rect(screen, BLACK, (50, 50, 350, 450), 2)  # Memoria más alta y ancha
     mem_title = font.render("Memoria Principal", True, BLACK)
-    screen.blit(mem_title, (140, 30))
+    screen.blit(mem_title, (150, 30))
 
+    # Ajuste de particiones en memoria
+    partition_height = 100  # Altura uniforme de cada partición
     y_offset = 60
     for idx, part in enumerate(simulador.memoria_principal):
         color = GREEN if part.proceso else GRAY
-        pygame.draw.rect(screen, color, (60, y_offset + idx * 40, 280, 30))
+        if idx == 0:
+            partition_height = 150
+        else:
+            partition_height = 100
+        pygame.draw.rect(screen, color, (60, y_offset + idx * partition_height, 330, partition_height - 10))  # Más ancho y espacio entre particiones
         pid_text = font.render(
             f"P{part.proceso.id}" if part.proceso else "Libre",
             True, BLACK,
@@ -69,13 +78,13 @@ def dibujar_estado(simulador):
             f"Frag. Interna: {part.fragmetacion_interna()}",
             True, RED if part.proceso else BLACK,
         )
-        screen.blit(pid_text, (70, y_offset + idx * 40 + 5))
-        screen.blit(frag_text, (70, y_offset + idx * 40 + 20))
+        screen.blit(pid_text, (70, y_offset + idx * partition_height + 10))
+        screen.blit(frag_text, (70, y_offset + idx * partition_height + 40))
 
     # Proceso en CPU
-    pygame.draw.rect(screen, BLACK, (400, 50, 200, 100), 2)
+    pygame.draw.rect(screen, BLACK, (450, 50, 300, 150), 2)  # Más ancho para texto
     cpu_title = font.render("CPU", True, BLACK)
-    screen.blit(cpu_title, (470, 30))
+    screen.blit(cpu_title, (570, 30))
 
     if simulador.ejecutando:
         proceso_cpu = simulador.ejecutando
@@ -83,17 +92,15 @@ def dibujar_estado(simulador):
             f"P{proceso_cpu.id} - {progreso(proceso_cpu.mostrar_progreso())}",
             True, BLACK,
         )
-        screen.blit(proceso_cpu_text, (420, 60))  # Ajusta la posición si es necesario
+        screen.blit(proceso_cpu_text, (460, 90))  # Centrado dentro del área de CPU
     else:
-        no_proceso_text = font.render(
-            "No hay proceso en la CPU", True, BLACK
-        )
-        screen.blit(no_proceso_text, (420, 60))
+        no_proceso_text = font.render("No hay proceso en la CPU", True, BLACK)
+        screen.blit(no_proceso_text, (460, 90))
 
     # Cola de listos
-    pygame.draw.rect(screen, BLACK, (650, 50, 300, 150), 2)
+    pygame.draw.rect(screen, BLACK, (800, 50, 350, 200), 2)  # Más grande para cola
     listos_title = font.render("Cola de Listos", True, BLACK)
-    screen.blit(listos_title, (750, 30))
+    screen.blit(listos_title, (930, 30))
 
     y_offset = 60
     for idx, proceso in enumerate(simulador.cola_listos):
@@ -101,25 +108,103 @@ def dibujar_estado(simulador):
             f"P{proceso.id} - {progreso(proceso.mostrar_progreso())}",
             True, BLACK,
         )
-        screen.blit(listos_text, (660, y_offset + idx * 30))
+        screen.blit(listos_text, (810, y_offset + idx * 30))
 
     # Cola de suspendidos
-    pygame.draw.rect(screen, BLACK, (50, 400, 300, 150), 2)
-    suspendidos_title = font.render("Cola de Suspendidos", True, BLACK)
-    screen.blit(suspendidos_title, (110, 380))
+    pygame.draw.rect(screen, BLACK, (50, 520, 350, 200), 2)  # Ajustada proporcionalmente
+    suspendidos_title = font.render("Cola de Nuevos", True, BLACK)
+    screen.blit(suspendidos_title, (140, 500))
 
-    y_offset = 410
-    for idx, proceso in enumerate(simulador.cola_suspendidos):
+    y_offset = 530
+    for idx, proceso in enumerate(simulador.cola_nuevos):
         suspendidos_text = font.render(f"P{proceso.id}", True, BLACK)
         screen.blit(suspendidos_text, (60, y_offset + idx * 30))
 
+
+    #Cola de nuevos 
+    pygame.draw.rect(screen, BLACK, (450, 220, 300, 200), 2)  # Ajustada proporcionalmente
+    nuevos_title = font.render("Cola de Supendidos", True, BLACK)
+    screen.blit(nuevos_title, (540, 200))
+
+    y_offset = 230
+    for idx, proceso in enumerate(simulador.cola_suspendidos):
+        nuevos_text = font.render(f"P{proceso.id}", True, BLACK)
+        screen.blit(nuevos_text, (460, y_offset + idx * 30))
+
+
     # Información general
     info_text = font.render(f"Tiempo: {simulador.t} | Quantum: {simulador.quantum}", True, BLACK)
-    screen.blit(info_text, (50, 600))
+    screen.blit(info_text, (50, 750))
+
+    # Botón para avanzar ciclo
+    pygame.draw.rect(screen, BLUE, (WIDTH // 2 - 50, HEIGHT - 100, 100, 40))
+    btn_text = font.render("Avanzar", True, WHITE)
+    screen.blit(btn_text, (WIDTH // 2 - btn_text.get_width() // 2, HEIGHT - 90))
+
+    pygame.display.flip()
+def dibujar_procesos_cargados(screen, procesos):
+    """Dibuja los procesos cargados inicialmente en pantalla."""
+    pygame.draw.rect(screen, BLACK, (50, 700, 1100, 80), 2)  # Rectángulo para mostrar procesos
+    title_text = font.render("Procesos cargados:", True, BLACK)
+    screen.blit(title_text, (60, 680))
+
+    # Mostrar IDs de los procesos
+    x_offset = 60
+    for idx, proceso in enumerate(procesos):
+        proceso_text = font.render(f"P{proceso.id} (Tamaño: {proceso.memoria})", True, BLACK)
+        screen.blit(proceso_text, (x_offset, 720))
+        x_offset += 200  # Espaciado entre textos
+
+
+def dibujar_reporte_final(screen, simulador):
+    """Dibuja el reporte final en pantalla al terminar la simulación."""
+    screen.fill(WHITE)  # Limpiar pantalla
+    title = title_font.render("Reporte Final", True, BLACK)
+    screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
+
+    y_offset = 60
+    tiempo_espera_promedio = 0
+    tiempo_retorno_promedio = 0
+
+    for idx, p in enumerate(simulador.carga.procesos):
+        reporte_text = font.render(
+            f"P{p.id} - Espera: {p.tiempo_espera} - Retorno: {p.tiempo_retorno}",
+            True,
+            BLACK,
+        )
+        screen.blit(reporte_text, (60, y_offset + idx * 30))
+        tiempo_espera_promedio += p.tiempo_espera
+        tiempo_retorno_promedio += p.tiempo_retorno
+
+    # Mostrar promedios
+    y_offset += len(simulador.carga.procesos) * 30 + 20
+    promedio_espera_text = font.render(
+        f"Tiempo de espera promedio: {tiempo_espera_promedio / len(simulador.carga.procesos):.2f}",
+        True,
+        BLACK,
+    )
+    promedio_retorno_text = font.render(
+        f"Tiempo de retorno promedio: {tiempo_retorno_promedio / len(simulador.carga.procesos):.2f}",
+        True,
+        BLACK,
+    )
+    rendimiento_text = font.render(
+        f"Rendimiento: {len(simulador.carga.procesos) / simulador.t:.2f} procesos por unidad de tiempo",
+        True,
+        BLACK,
+    )
+    screen.blit(promedio_espera_text, (60, y_offset))
+    screen.blit(promedio_retorno_text, (60, y_offset + 30))
+    screen.blit(rendimiento_text, (60, y_offset + 60))
 
     pygame.display.flip()
 
-
+def mostrar_procesos_iniciales(procesos):
+    """Muestra todos los procesos cargados antes de iniciar la simulación."""
+    print("\n=== Procesos Cargados ===")
+    for p in procesos.procesos:
+        print(f"ID: {p.id}, Tamaño: {p.memoria}, TA: {p.tiempo_arribo}, TI: {p.tiempo_irrupcion}")
+    print("=========================\n")
 
 
 def main():
@@ -127,35 +212,91 @@ def main():
     root = tk.Tk()
     root.withdraw()
 
-    procesos = abrir_archivo()
-    if not procesos:
-        return
+    procesos = None
+    simulador = None
+    reporte_mostrado = False
+    procesos_cargados = False  # Indica si los procesos iniciales ya fueron dibujados
+    boton_cargar_clicked = False  # Flag to track if the "Cargar" button has been clicked
 
-    simulador = Simulador(procesos)
+    # Coordenadas de los botones
+    boton_cargar_rect = pygame.Rect(50, HEIGHT - 100, 100, 40)
+    boton_avanzar_rect = pygame.Rect(WIDTH // 2 - 50, HEIGHT - 100, 100, 40)
 
-    # Simulación gráfica
+    # Dibujar botones una vez
+    if not boton_cargar_clicked:
+        pygame.draw.rect(screen, GREEN, boton_cargar_rect)  # Botón para cargar archivo
+        cargar_text = font.render("Cargar", True, WHITE)
+        screen.blit(cargar_text, (boton_cargar_rect.x + 15, boton_cargar_rect.y + 10))
+
+    pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
+    avanzar_text = font.render("Avanzar", True, WHITE)
+    screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+
+    pygame.display.flip()
+
+    # Inicializar Pygame
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:  # Avanzar ciclo con barra espaciadora
+            elif event.type == pygame.MOUSEBUTTONDOWN:  # Detectar clics del mouse
+                if boton_cargar_rect.collidepoint(event.pos) and not boton_cargar_clicked:  # Clic en el botón "Cargar"
+                    archivo = filedialog.askopenfilename(
+                        title="Seleccionar archivo de procesos",
+                        filetypes=[("Archivos de texto", "*.csv"), ("Todos los archivos", "*.*")]
+                    )
+                    if archivo:  # Si se seleccionó un archivo
+                        procesos = CargaTrabajo(archivo)
+                        mostrar_procesos_iniciales(procesos)  # Mostrar todos los procesos cargados
+                        simulador = Simulador(procesos)
+                        procesos_cargados = False  # Permitir que se dibujen los procesos nuevamente
+                        boton_cargar_clicked = True  # Set the flag to True after clicking the button
+                        screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                        dibujar_estado(simulador)
+                        pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
+                        screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+                        pygame.display.flip()
+                elif boton_avanzar_rect.collidepoint(event.pos) and simulador:  # Clic en "Avanzar"
                     simulador.t += 1
                     simulador.quantum = (simulador.quantum % 3) + 1
                     for nuevo in simulador.procesos_nuevos():
                         simulador.admitir_proceso(nuevo)
                     simulador.planificar_cpu()
-                elif event.key == pygame.K_q:  # Salir con 'q'
-                    running = False
+                    screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                    dibujar_estado(simulador)
+                    pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
+                    screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+                    pygame.display.flip()
+            elif event.type == pygame.KEYDOWN:  # Tecla para avanzar (opcional)
+                if event.key == pygame.K_SPACE and simulador:  # Avanzar ciclo con barra espaciadora
+                    simulador.t += 1
+                    simulador.quantum = (simulador.quantum % 3) + 1
+                    for nuevo in simulador.procesos_nuevos():
+                        simulador.admitir_proceso(nuevo)
+                    simulador.planificar_cpu()
+                    screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                    dibujar_estado(simulador)
+                    pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
+                    screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+                    pygame.display.flip()
 
-        # Dibujar estado actual
-        dibujar_estado(simulador)
+        # Dibujar estado actual si aún hay procesos
+        if simulador and not reporte_mostrado:
+            screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+            dibujar_estado(simulador)
 
-        # Terminar simulación si no hay procesos en la cola de listos, no hay proceso en ejecución y no hay procesos nuevos
-        if not simulador.cola_listos and simulador.ejecutando is None and not simulador.procesos_nuevos():
-            print("Simulación terminada. No hay más procesos en la cola de listos.")
-            running = False
+            # Mostrar procesos cargados solo una vez
+            if not procesos_cargados:
+                dibujar_procesos_cargados(screen, procesos.procesos)
+                procesos_cargados = True
+
+        # Terminar simulación si no hay más procesos pendientes
+        if simulador and not simulador.cola_listos and not simulador.ejecutando and not simulador.procesos_nuevos():
+            if not reporte_mostrado:
+                print("Simulación terminada. Mostrando reporte final.")
+                dibujar_reporte_final(screen, simulador)
+                reporte_mostrado = True
 
     pygame.quit()
 
