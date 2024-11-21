@@ -5,6 +5,7 @@ import pygame
 from CargarProcesos import CargaTrabajo
 from Simulador import Simulador
 import time
+import csv
 
 # Inicializar PyGame
 pygame.init()
@@ -21,10 +22,25 @@ GREEN = (0, 255, 0)
 GRAY = (200, 200, 200)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+DARK_GRAY = (50, 50, 50)
 
 # Fuentes
 font = pygame.font.Font(None, 24)
 title_font = pygame.font.Font(None, 32)
+
+def draw_rounded_rect(surface, color, rect, corner_radius):
+    """Dibuja un rectángulo con bordes redondeados."""
+    pygame.draw.rect(surface, color, rect, border_radius=corner_radius)
+
+def draw_button(surface, rect, color, text, text_color, corner_radius=10, shadow=True):
+    """Dibuja un botón con bordes redondeados y sombra."""
+    if shadow:
+        shadow_rect = rect.move(5, 5)
+        draw_rounded_rect(surface, DARK_GRAY, shadow_rect, corner_radius)
+    draw_rounded_rect(surface, color, rect, corner_radius)
+    text_surf = font.render(text, True, text_color)
+    text_rect = text_surf.get_rect(center=rect.center)
+    surface.blit(text_surf, text_rect)
 
 def progreso(porcentaje: float) -> str:
     """Muestra el progreso de un proceso mediante una barra de progreso."""
@@ -49,19 +65,26 @@ def abrir_archivo():
         # Verifica que el archivo tenga la extensión .csv
         if not archivo.lower().endswith('.csv'):
             print("Error: El archivo debe tener la extensión .csv")
+            mostrar_error(screen, "Error: El archivo debe tener la extensión .csv")
             return None
         try:
+            # Verificar si el archivo está vacío
+            with open(archivo, 'r') as f:
+                reader = csv.reader(f)
+                if not any(reader):
+                    raise ValueError("El archivo CSV está vacío")
             carga_procesos = CargaTrabajo(archivo)
             return carga_procesos
         except ValueError as e:
             print(f"Error: {e}")
+            mostrar_error(screen, f"Error: {e}")
             return None
     else:
         print("No se seleccionó ningún archivo.")
         return None
 
 def mostrar_error(screen, mensaje):
-    """Muestra un mensaje de error en la pantalla."""
+    """Muestra un mensaje de error en la pantalla y un botón para reiniciar."""
     screen.fill(WHITE)  # Limpiar pantalla
     error_rect = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2 - 50, 400, 100)
     pygame.draw.rect(screen, RED, error_rect)
@@ -70,7 +93,13 @@ def mostrar_error(screen, mensaje):
     error_text = font.render(mensaje, True, WHITE)
     screen.blit(error_text, (error_rect.x + 20, error_rect.y + 40))
 
+   # Dibujar botón de reiniciar
+    boton_reiniciar_rect = pygame.Rect(WIDTH // 2 - 50, HEIGHT // 2 + 60, 100, 40)
+    draw_button(screen, boton_reiniciar_rect, RED, "Reiniciar", WHITE)
+
     pygame.display.flip()
+
+    return boton_reiniciar_rect
 
 def dibujar_estado(simulador):
     """Dibuja el estado actual del simulador en la pantalla."""
@@ -232,6 +261,9 @@ def mostrar_procesos_iniciales(procesos):
     print("=========================\n")
 
 def main():
+    def reiniciar_programa():
+        main()
+
     # Crear ventana de Tkinter pero sin mostrarla
     root = tk.Tk()
     root.withdraw()
@@ -248,22 +280,20 @@ def main():
 
     # Dibujar botones una vez
     if not boton_cargar_clicked:
-        pygame.draw.rect(screen, GREEN, boton_cargar_rect)  # Botón para cargar archivo
-        cargar_text = font.render("Cargar", True, WHITE)
-        screen.blit(cargar_text, (boton_cargar_rect.x + 15, boton_cargar_rect.y + 10))
+        draw_button(screen, boton_cargar_rect, GREEN, "Cargar", WHITE)
 
-    pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
-    avanzar_text = font.render("Avanzar", True, WHITE)
-    screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+    draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
 
     pygame.display.flip()
 
     # Inicializar Pygame
     running = True
+    boton_reiniciar_rect = None
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                return
             elif event.type == pygame.MOUSEBUTTONDOWN:  # Detectar clics del mouse
                 if boton_cargar_rect.collidepoint(event.pos) and not boton_cargar_clicked:  # Clic en el botón "Cargar"
                     archivo = filedialog.askopenfilename(
@@ -274,11 +304,15 @@ def main():
                         # Verifica que el archivo tenga la extensión .csv
                         if not archivo.lower().endswith('.csv'):
                             print("Error: El archivo debe tener la extensión .csv")
-                            mostrar_error(screen, "Error: El archivo debe tener la extensión .csv")
-                            time.sleep(10)# Esperar 10 segundos
-                            running = False  # Termina la simulación
+                            boton_reiniciar_rect = mostrar_error(screen, "Error: El archivo debe tener la extensión .csv")
+                            screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
                             break
                         try:
+                            # Verificar si el archivo está vacío
+                            with open(archivo, 'r') as f:
+                                reader = csv.reader(f)
+                                if not any(reader):
+                                    raise ValueError("El archivo CSV está vacío")
                             procesos = CargaTrabajo(archivo)
                             mostrar_procesos_iniciales(procesos)  # Mostrar todos los procesos cargados
                             simulador = Simulador(procesos)
@@ -286,13 +320,12 @@ def main():
                             boton_cargar_clicked = True  # Set the flag to True after clicking the button
                             screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
                             dibujar_estado(simulador)
-                            pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
-                            screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+                            draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                             pygame.display.flip()
                         except ValueError as e:
                             print(f"Error: {e}")
-                            mostrar_error(screen, f"Error: {e}")
-                            running = False  # Termina la simulación
+                            boton_reiniciar_rect = mostrar_error(screen, f"Error: {e}")
+                            screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
                             break
                 elif boton_avanzar_rect.collidepoint(event.pos) and simulador:  # Clic en "Avanzar"
                     simulador.t += 1
@@ -302,9 +335,11 @@ def main():
                     simulador.planificar_cpu()
                     screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
                     dibujar_estado(simulador)
-                    pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
-                    screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+                    draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
+                elif boton_reiniciar_rect and boton_reiniciar_rect.collidepoint(event.pos):  # Clic en "Reiniciar"
+                    reiniciar_programa()
+                    return
             elif event.type == pygame.KEYDOWN:  # Tecla para avanzar (opcional)
                 if event.key == pygame.K_SPACE and simulador:  # Avanzar ciclo con barra espaciadora
                     simulador.t += 1
@@ -314,8 +349,7 @@ def main():
                     simulador.planificar_cpu()
                     screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
                     dibujar_estado(simulador)
-                    pygame.draw.rect(screen, BLUE, boton_avanzar_rect)  # Botón para avanzar
-                    screen.blit(avanzar_text, (boton_avanzar_rect.x + 15, boton_avanzar_rect.y + 10))
+                    draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
 
         # Dibujar estado actual si aún hay procesos
