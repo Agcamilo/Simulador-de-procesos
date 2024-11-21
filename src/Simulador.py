@@ -18,6 +18,7 @@ class Simulador:
         self.carga = carga
         self.cola_listos: List[Proceso] = []
         self.cola_suspendidos: List[Proceso] = []
+        self.cola_nuevos: set[Proceso] = set()
         self.ejecutando: Optional[Proceso] = None
 
         # Estructuras de datos para la memoria.
@@ -96,21 +97,24 @@ class Simulador:
             proceso.estado = d1["SUSPENDIDO"]
             self.memoria_secundaria.append(nueva_particion)
             self.cola_suspendidos.append(proceso)
-            print(f"Proceso {proceso.id} admitido en memoria secundaria.")
+            if (nueva_particion.proceso in self.cola_nuevos):
+                self.cola_nuevos.remove(nueva_particion.proceso)
+            #print(f"Proceso {proceso.id} admitido en memoria secundaria.")
         else:
-            print(f"Proceso {proceso.id} rechazado por falta de espacio en memoria.")
+            #print(f"Proceso {proceso.id} rechazado por falta de espacio en memoria.")
+            self.cola_nuevos.add(proceso)
 
     def terminar_procesos(self):
         """Libera memoria principal y mueve un proceso de memoria secundaria."""
         if self.ejecutando is None:
-            print("No hay proceso en ejecución.")
+            #print("No hay proceso en ejecución.")
             return
 
         part = self.encontrar_particion_proceso(self.ejecutando)
         if part is not None:
             part.proceso = None
         self.ejecutando.estado = d1["TERMINADO"]
-        print(f"Proceso {self.ejecutando.id} terminado y liberado de memoria principal.")
+        #print(f"Proceso {self.ejecutando.id} terminado y liberado de memoria principal.")
         self.ejecutando = None
         self.quantum = 0
 
@@ -130,7 +134,8 @@ class Simulador:
             part.proceso = proceso
             proceso.estado = d1["LISTO"]
         else:
-            print(f"Proceso {proceso.id} no puede ser activado porque no hay partición libre")
+            a=1
+            #print(f"Proceso {proceso.id} no puede ser activado porque no hay partición libre")
 
     def asignar_cpu(self):
         """Asigna la CPU al siguiente proceso de la cola de listos."""
@@ -177,8 +182,15 @@ class Simulador:
             print("Cola de suspendidos:")
             for pid in self.cola_suspendidos:
                 print(f"  Proceso: P{pid.id} ({pid.estado})")
+        
+        if len(self.cola_nuevos) != 0:
+            print("Cola de nuevos:")
+            for proceso in self.cola_nuevos:
+                print(f"  Proceso: P{proceso.id} ({proceso.estado})")
+
         print(f"Tiempo: {self.t}")
         print(f"Quantum: {self.quantum}")
+
 
         # Imprimir tabla de particiones de memoria
         print("\nTabla de memoria: (valores en bytes)")

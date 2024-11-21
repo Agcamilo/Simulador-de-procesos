@@ -16,11 +16,15 @@ class CargaTrabajo:
 
     def __init__(self, archivo: str):
         """Inicializa una CargaTrabajo a partir de un archivo CSV."""
+        # Verifica que el archivo tenga la extensión .csv
+        if not archivo.lower().endswith('.csv'):
+            raise ValueError("El archivo debe tener la extensión .csv")
+
         self.procesos: List[Proceso] = []
         with open(archivo, "r", encoding="utf-8") as f:
             for linea in f.readlines():
-                [pid, ta, ti, mem] = linea.split(";")
-                self.procesos.append(Proceso(int(pid), int(ta), int(ti), int(mem)*1024))
+                [pid, ta, ti, mem] = linea.strip().split(";")
+                self.procesos.append(Proceso(int(pid), int(ta), int(ti), int(mem) * 1024))
         self.procesos.sort(key=lambda p: p.tiempo_arribo)
 
     def __repr__(self):
