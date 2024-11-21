@@ -20,10 +20,15 @@ def abrir_archivo():
     
     if archivo:
         print(f"Archivo seleccionado: {archivo}")
-        CargaProcesos = CargaTrabajo(archivo)
-        return CargaProcesos
+        try:
+            CargaProcesos = CargaTrabajo(archivo)
+            return CargaProcesos
+        except ValueError as e:
+            print(f"Error: {e}")
+            return None
     else:
         print("No se seleccionó ningún archivo.")
+        return None
 
 def menu():
         print("Menú:")
@@ -32,9 +37,14 @@ def menu():
         opcion = input("Selecciona una opción: ")
 
         if opcion == "1":
-            return abrir_archivo()
+            carga_trabajo = abrir_archivo()
+            if carga_trabajo is None:
+                print("Error al abrir el archivo. Terminando simulación.")
+                exit(1)
+            return carga_trabajo
         elif opcion == "0":
             print("Terminando programa.")
+            exit(0)
         else:
             print("Opción no válida. Inténtalo de nuevo.")
 
