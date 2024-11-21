@@ -18,9 +18,9 @@ pygame.display.set_caption("Simulador de Memoria")
 # Colores
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-GRAY = (200, 200, 200)
-RED = (255, 0, 0)
+GREEN = (99, 194, 19)
+GRAY = (155, 158, 145)
+RED = (63, 42, 7)
 BLUE = (0, 0, 255)
 DARK_GRAY = (50, 50, 50)
 
@@ -109,31 +109,62 @@ def dibujar_estado(simulador):
     title = title_font.render("Simulador de Memoria", True, BLACK)
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
 
+    # Ajuste de particiones en memoria
+    y_offset = 60  # Posición inicial en el eje Y
+
+
     # Memoria principal
     pygame.draw.rect(screen, BLACK, (50, 50, 350, 450), 2)  # Memoria más alta y ancha
     mem_title = font.render("Memoria Principal", True, BLACK)
     screen.blit(mem_title, (150, 30))
 
-    # Ajuste de particiones en memoria
-    partition_height = 100  # Altura uniforme de cada partición
-    y_offset = 60
+    
     for idx, part in enumerate(simulador.memoria_principal):
         color = GREEN if part.proceso else GRAY
+
+        # Asignar altura dependiendo del índice
         if idx == 0:
-            partition_height = 150
+            partition_height = 200  # Grande
+        elif idx == 1:
+            partition_height = 120  # Mediana
         else:
-            partition_height = 100
-        pygame.draw.rect(screen, color, (60, y_offset + idx * partition_height, 330, partition_height - 10))  # Más ancho y espacio entre particiones
+            partition_height = 80  # Chica
+
+        # Dibujar la partición con las alturas definidas
+        pygame.draw.rect(
+            screen,
+            color,
+            (60, y_offset, 330, partition_height - 10)  # Ajustar altura
+        )
+        
+        # Renderizar texto de información en cada partición
         pid_text = font.render(
             f"P{part.proceso.id}" if part.proceso else "Libre",
-            True, BLACK,
+            True,
+            BLACK
         )
         frag_text = font.render(
             f"Frag. Interna: {part.fragmetacion_interna()}",
-            True, RED if part.proceso else BLACK,
+            True,
+            RED if part.proceso else BLACK
         )
-        screen.blit(pid_text, (70, y_offset + idx * partition_height + 10))
-        screen.blit(frag_text, (70, y_offset + idx * partition_height + 40))
+        screen.blit(pid_text, (70, y_offset + 10))  # Texto del ID del proceso
+        screen.blit(frag_text, (70, y_offset + 40))  # Texto de fragmentación
+
+        # Incrementar y_offset para la próxima partición
+        y_offset += partition_height
+
+    # Ahora, dibujar la partición para el SO justo debajo
+    partition_height_so = 50  # Altura fija para el SO
+    pygame.draw.rect(
+        screen,
+        GRAY,  # Color para el SO
+        (60, y_offset, 330, partition_height_so - 17)  # Dibujar rectángulo
+    )
+
+    # Texto para la partición del SO
+    pid_text_so = font.render("S.O", True, BLACK)
+    screen.blit(pid_text_so, (70, y_offset + 10))  # Etiqueta para el SO
 
     # Proceso en CPU
     pygame.draw.rect(screen, BLACK, (450, 50, 300, 150), 2)  # Más ancho para texto
@@ -260,6 +291,9 @@ def mostrar_procesos_iniciales(procesos):
         print(f"ID: {p.id}, Tamaño: {p.memoria}, TA: {p.tiempo_arribo}, TI: {p.tiempo_irrupcion}")
     print("=========================\n")
 
+
+    
+
 def main():
     def reiniciar_programa():
         main()
@@ -272,17 +306,21 @@ def main():
     simulador = None
     reporte_mostrado = False
     procesos_cargados = False  # Indica si los procesos iniciales ya fueron dibujados
-    boton_cargar_clicked = False  # Flag to track if the "Cargar" button has been clicked
+    boton_cargar_clicked = False  # Flag para rastrear si se hizo clic en "Cargar"
 
     # Coordenadas de los botones
     boton_cargar_rect = pygame.Rect(50, HEIGHT - 100, 100, 40)
     boton_avanzar_rect = pygame.Rect(WIDTH // 2 - 50, HEIGHT - 100, 100, 40)
 
-    # Dibujar botones una vez
+    # Configurar el fondo y título inicial
+    screen.fill(DARK_GRAY)  # Fondo oscuro
+    title_text = title_font.render("Simulador de Procesos - Cafe Colombiano", True, WHITE)
+    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+    screen.blit(title_text, title_rect)
+
+    # Dibujar botones iniciales
     if not boton_cargar_clicked:
         draw_button(screen, boton_cargar_rect, GREEN, "Cargar", WHITE)
-
-    draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
 
     pygame.display.flip()
 
@@ -294,60 +332,63 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-            elif event.type == pygame.MOUSEBUTTONDOWN:  # Detectar clics del mouse
-                if boton_cargar_rect.collidepoint(event.pos) and not boton_cargar_clicked:  # Clic en el botón "Cargar"
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if boton_cargar_rect.collidepoint(event.pos) and not boton_cargar_clicked:
                     archivo = filedialog.askopenfilename(
                         title="Seleccionar archivo de procesos",
                         filetypes=[("Todos los archivos", "*.*")]
                     )
-                    if archivo:  # Si se seleccionó un archivo
-                        # Verifica que el archivo tenga la extensión .csv
+                    if archivo:
                         if not archivo.lower().endswith('.csv'):
                             print("Error: El archivo debe tener la extensión .csv")
                             boton_reiniciar_rect = mostrar_error(screen, "Error: El archivo debe tener la extensión .csv")
-                            screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                            screen.fill(DARK_GRAY)
                             break
                         try:
-                            # Verificar si el archivo está vacío
                             with open(archivo, 'r') as f:
                                 reader = csv.reader(f)
                                 if not any(reader):
                                     raise ValueError("El archivo CSV está vacío")
                             procesos = CargaTrabajo(archivo)
-                            mostrar_procesos_iniciales(procesos)  # Mostrar todos los procesos cargados
+                            mostrar_procesos_iniciales(procesos)
                             simulador = Simulador(procesos)
-                            procesos_cargados = False  # Permitir que se dibujen los procesos nuevamente
-                            boton_cargar_clicked = True  # Set the flag to True after clicking the button
-                            screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
-                            dibujar_estado(simulador)
+                            procesos_cargados = False
+                            boton_cargar_clicked = True
+                            
+                            # Mostrar estado inicial antes de permitir avanzar
+                            screen.fill(WHITE)
+                            for nuevo in simulador.procesos_nuevos():
+                                simulador.admitir_proceso(nuevo)
+                            dibujar_estado(simulador)  # Mostrar estado inicial
                             draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                             pygame.display.flip()
+                            
                         except ValueError as e:
                             print(f"Error: {e}")
                             boton_reiniciar_rect = mostrar_error(screen, f"Error: {e}")
-                            screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                            screen.fill(DARK_GRAY)
                             break
-                elif boton_avanzar_rect.collidepoint(event.pos) and simulador:  # Clic en "Avanzar"
+                elif boton_avanzar_rect.collidepoint(event.pos) and simulador:
                     simulador.t += 1
                     simulador.quantum = (simulador.quantum % 3) + 1
                     for nuevo in simulador.procesos_nuevos():
                         simulador.admitir_proceso(nuevo)
                     simulador.planificar_cpu()
-                    screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                    screen.fill(WHITE)
                     dibujar_estado(simulador)
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
-                elif boton_reiniciar_rect and boton_reiniciar_rect.collidepoint(event.pos):  # Clic en "Reiniciar"
+                elif boton_reiniciar_rect and boton_reiniciar_rect.collidepoint(event.pos):
                     reiniciar_programa()
                     return
-            elif event.type == pygame.KEYDOWN:  # Tecla para avanzar (opcional)
-                if event.key == pygame.K_SPACE and simulador:  # Avanzar ciclo con barra espaciadora
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and simulador:
                     simulador.t += 1
                     simulador.quantum = (simulador.quantum % 3) + 1
                     for nuevo in simulador.procesos_nuevos():
                         simulador.admitir_proceso(nuevo)
                     simulador.planificar_cpu()
-                    screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
+                    screen.fill(WHITE)
                     dibujar_estado(simulador)
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
