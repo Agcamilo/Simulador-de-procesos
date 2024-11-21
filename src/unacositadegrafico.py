@@ -374,7 +374,7 @@ def main():
                                 simulador.admitir_proceso(nuevo)
                             simulador.asignar_cpu()
                             dibujar_estado(simulador)  # Mostrar estado inicial
-                            mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
+                            
                             draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                             pygame.display.flip()
                             
@@ -391,7 +391,7 @@ def main():
                     simulador.planificar_cpu()
                     screen.fill(WHITE)
                     dibujar_estado(simulador)
-                    mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
+          
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
                 elif boton_reiniciar_rect and boton_reiniciar_rect.collidepoint(event.pos):
@@ -406,7 +406,7 @@ def main():
                     simulador.planificar_cpu()
                     screen.fill(WHITE)
                     dibujar_estado(simulador)
-                    mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
+
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
 
@@ -414,7 +414,7 @@ def main():
         if simulador and not reporte_mostrado:
             screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
             dibujar_estado(simulador)
-            mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
+    
 
             # Mostrar procesos cargados solo una vez
             if not procesos_cargados:
