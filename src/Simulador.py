@@ -151,6 +151,11 @@ class Simulador:
         for proceso in self.cola_listos:
             proceso.proceso_listo()
 
+        for proceso in self.cola_suspendidos:
+            proceso.proceso_listo()
+
+      
+
         if self.ejecutando:
             # Se notifica al proceso en EJECUTANDO que avanzó otro instante de tiempo.
             self.ejecutando.proceso_ejecutando()

@@ -18,8 +18,8 @@ class Proceso:
         self.tiempo_arribo = ta
         self.tiempo_irrupcion = ti
         self.tiempo_ejecutando:int = 0 #Tiempo que lleva en la CPU
-        self.tiempo_retorno:int  = -1 #Tiempo que tarda en ejecutarse
-        self.tiempo_espera:int  = -1 #Tiempo que tarda en llegar a la CPU (se encuentra en cola de listos)
+        self.tiempo_retorno:int  = 0 #Tiempo que tarda en ejecutarse
+        self.tiempo_espera:int  = 0 #Tiempo que tarda en llegar a la CPU (se encuentra en cola de listos)
    
     def proceso_ejecutando(self):
         #Incrementa el tiempo de ejecución y de retorno del proceso en cada instante de tiempo

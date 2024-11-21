@@ -320,8 +320,8 @@ def main():
     screen.blit(logo,(490,100))
     screen.blit(title_text, title_rect)
 
-    #integrantes
-    integrantes = ["INTEGRANTES DEL GRUPO:","Aguirre, Camilo","Boland Morley, Jeremias","Casco, Ariel","Petraccaro, Maximiliano"]
+    # Integrantes
+    integrantes = ["INTEGRANTES DEL GRUPO:", "Aguirre, Camilo", "Boland Morley, Jeremias", "Casco, Ariel", "Petraccaro, Maximiliano"]
 
     for idx, integrante in enumerate(integrantes):
         integrante_text = font.render(integrante, True, WHITE)
@@ -335,7 +335,6 @@ def main():
 
     # Inicializar Pygame
     running = True
-    procesos = None
     boton_reiniciar_rect = None
     while running:
         for event in pygame.event.get():
@@ -373,7 +372,9 @@ def main():
                             screen.fill(WHITE)
                             for nuevo in simulador.procesos_nuevos():
                                 simulador.admitir_proceso(nuevo)
+                            simulador.asignar_cpu()
                             dibujar_estado(simulador)  # Mostrar estado inicial
+                            mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
                             draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                             pygame.display.flip()
                             
@@ -390,6 +391,7 @@ def main():
                     simulador.planificar_cpu()
                     screen.fill(WHITE)
                     dibujar_estado(simulador)
+                    mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
                 elif boton_reiniciar_rect and boton_reiniciar_rect.collidepoint(event.pos):
@@ -404,17 +406,20 @@ def main():
                     simulador.planificar_cpu()
                     screen.fill(WHITE)
                     dibujar_estado(simulador)
+                    mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
 
-            
         # Dibujar estado actual si aún hay procesos
         if simulador and not reporte_mostrado:
             screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
             dibujar_estado(simulador)
+            mostrar_procesos_iniciales(procesos)  # Mostrar procesos iniciales
 
             # Mostrar procesos cargados solo una vez
-
+            if not procesos_cargados:
+                dibujar_procesos_cargados(screen, procesos.procesos)
+                procesos_cargados = True
 
         # Terminar simulación si no hay más procesos pendientes
         if simulador and not simulador.cola_listos and not simulador.ejecutando and not simulador.procesos_nuevos():
@@ -422,9 +427,6 @@ def main():
                 print("Simulación terminada. Mostrando reporte final.")
                 dibujar_reporte_final(screen, simulador)
                 reporte_mostrado = True
-                
-            
-        
 
     pygame.quit()
 
