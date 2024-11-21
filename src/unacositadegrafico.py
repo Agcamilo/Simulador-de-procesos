@@ -261,7 +261,7 @@ def dibujar_reporte_final(screen, simulador):
 
     for idx, p in enumerate(simulador.carga.procesos):
         reporte_text = font.render(
-            f"P{p.id} - Espera: {p.tiempo_espera} - Retorno: {p.tiempo_retorno}",
+            f"Proceso {p.id} - Tiempo de Espera: {p.tiempo_espera} - Tiempo de Retorno: {p.tiempo_retorno}",
             True,
             BLACK,
         )
