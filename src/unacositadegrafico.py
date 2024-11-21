@@ -360,6 +360,9 @@ def main():
                                 if not any(reader):
                                     raise ValueError("El archivo CSV está vacío")
                             procesos = CargaTrabajo(archivo)
+
+                            if len(procesos.procesos) > 10:
+                                raise ValueError("Cantidad de procesos excedidos")
                         
                             mostrar_procesos_iniciales(procesos)
                             simulador = Simulador(procesos)
