@@ -13,7 +13,7 @@ pygame.init()
 # Dimensiones de la ventana
 WIDTH, HEIGHT = 1200, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Simulador de Memoria")
+pygame.display.set_caption("Simulador de Procesos")
 
 # Colores
 BLACK = (0, 0, 0)
@@ -23,6 +23,7 @@ GRAY = (155, 158, 145)
 RED = (63, 42, 7)
 BLUE = (0, 0, 255)
 DARK_GRAY = (50, 50, 50)
+CAFE = (179, 129, 47)
 
 # Fuentes
 font = pygame.font.Font(None, 24)
@@ -106,7 +107,7 @@ def dibujar_estado(simulador):
     screen.fill(WHITE)
 
     # Título principal
-    title = title_font.render("Simulador de Memoria", True, BLACK)
+    title = title_font.render("Simulador de Procesos", True, BLACK)
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
 
     # Ajuste de particiones en memoria
@@ -216,7 +217,6 @@ def dibujar_estado(simulador):
         nuevos_text = font.render(f"P{proceso.id}", True, BLACK)
         screen.blit(nuevos_text, (460, y_offset + idx * 30))
 
-
     # Información general
     info_text = font.render(f"Tiempo: {simulador.t} | Quantum: {simulador.quantum}", True, BLACK)
     screen.blit(info_text, (50, 750))
@@ -227,6 +227,14 @@ def dibujar_estado(simulador):
     screen.blit(btn_text, (WIDTH // 2 - btn_text.get_width() // 2, HEIGHT - 90))
 
     pygame.display.flip()
+
+def mostrar_procesos_iniciales(procesos):
+    """Muestra todos los procesos cargados debajo de la cola de listos en la pantalla."""
+
+    print("\n=== Procesos Cargados ===")
+    for p in procesos.procesos:
+        print(f"ID: {p.id}, Tamaño: {p.memoria}, TA: {p.tiempo_arribo}, TI: {p.tiempo_irrupcion}")
+    print("=========================\n")
 
 def dibujar_procesos_cargados(screen, procesos):
     """Dibuja los procesos cargados inicialmente en pantalla."""
@@ -283,15 +291,6 @@ def dibujar_reporte_final(screen, simulador):
     screen.blit(rendimiento_text, (60, y_offset + 60))
 
     pygame.display.flip()
-
-def mostrar_procesos_iniciales(procesos):
-    """Muestra todos los procesos cargados antes de iniciar la simulación."""
-    print("\n=== Procesos Cargados ===")
-    for p in procesos.procesos:
-        print(f"ID: {p.id}, Tamaño: {p.memoria}, TA: {p.tiempo_arribo}, TI: {p.tiempo_irrupcion}")
-    print("=========================\n")
-
-
     
 
 def main():
@@ -313,10 +312,20 @@ def main():
     boton_avanzar_rect = pygame.Rect(WIDTH // 2 - 50, HEIGHT - 100, 100, 40)
 
     # Configurar el fondo y título inicial
-    screen.fill(DARK_GRAY)  # Fondo oscuro
+    screen.fill(CAFE)  # Fondo oscuro
+    logo = pygame.image.load("Archivos/logo.png")
     title_text = title_font.render("Simulador de Procesos - Cafe Colombiano", True, WHITE)
     title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+    logo = pygame.transform.scale(logo,(250,200))
+    screen.blit(logo,(490,100))
     screen.blit(title_text, title_rect)
+
+    #integrantes
+    integrantes = ["INTEGRANTES DEL GRUPO:","Aguirre, Camilo","Boland Morley, Jeremias","Casco, Ariel","Petraccaro, Maximiliano"]
+
+    for idx, integrante in enumerate(integrantes):
+        integrante_text = font.render(integrante, True, WHITE)
+        screen.blit(integrante_text, (WIDTH // 2 - integrante_text.get_width() // 2, HEIGHT // 2 + 50 + idx * 30))
 
     # Dibujar botones iniciales
     if not boton_cargar_clicked:
@@ -326,6 +335,7 @@ def main():
 
     # Inicializar Pygame
     running = True
+    procesos = None
     boton_reiniciar_rect = None
     while running:
         for event in pygame.event.get():
@@ -350,6 +360,7 @@ def main():
                                 if not any(reader):
                                     raise ValueError("El archivo CSV está vacío")
                             procesos = CargaTrabajo(archivo)
+                        
                             mostrar_procesos_iniciales(procesos)
                             simulador = Simulador(procesos)
                             procesos_cargados = False
@@ -393,15 +404,14 @@ def main():
                     draw_button(screen, boton_avanzar_rect, BLUE, "Avanzar", WHITE)
                     pygame.display.flip()
 
+            
         # Dibujar estado actual si aún hay procesos
         if simulador and not reporte_mostrado:
             screen.fill(WHITE)  # Limpiar pantalla para evitar parpadeo
             dibujar_estado(simulador)
 
             # Mostrar procesos cargados solo una vez
-            if not procesos_cargados:
-                dibujar_procesos_cargados(screen, procesos.procesos)
-                procesos_cargados = True
+
 
         # Terminar simulación si no hay más procesos pendientes
         if simulador and not simulador.cola_listos and not simulador.ejecutando and not simulador.procesos_nuevos():
@@ -409,6 +419,9 @@ def main():
                 print("Simulación terminada. Mostrando reporte final.")
                 dibujar_reporte_final(screen, simulador)
                 reporte_mostrado = True
+                
+            
+        
 
     pygame.quit()
 
