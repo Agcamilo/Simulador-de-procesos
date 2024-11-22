@@ -250,27 +250,83 @@ def dibujar_procesos_cargados(screen, procesos):
         x_offset += 200  # Espaciado entre textos
 
 def dibujar_reporte_final(screen, simulador):
-    """Dibuja el reporte final en pantalla al terminar la simulación."""
+    """Dibuja el reporte final en formato tabla."""
     screen.fill(WHITE)  # Limpiar pantalla
+
+    # Título
     title = title_font.render("Reporte Final", True, BLACK)
     screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 10))
 
-    y_offset = 60
+    # Coordenadas y dimensiones
+    y_start = 60
+    x_start = 60
+    row_height = 30
+    col_widths = [150, 150, 150]  # Anchos de columnas
+    header_height = 40
+
+    # Dibujar encabezados
+    headers = ["Proceso", "Tiempo de Espera", "Tiempo de Retorno"]
+    for i, header in enumerate(headers):
+        pygame.draw.rect(
+            screen, GRAY, (x_start + sum(col_widths[:i]), y_start, col_widths[i], header_height)
+        )
+        header_text = font.render(header, True, BLACK)
+        screen.blit(
+            header_text,
+            (
+                x_start + sum(col_widths[:i]) + (col_widths[i] - header_text.get_width()) // 2,
+                y_start + (header_height - header_text.get_height()) // 2,
+            ),
+        )
+    
+    pygame.draw.line(screen, BLACK, (x_start, y_start + header_height), (x_start + sum(col_widths), y_start + header_height), 2)
+
+    # Dibujar filas de datos
     tiempo_espera_promedio = 0
     tiempo_retorno_promedio = 0
 
     for idx, p in enumerate(simulador.carga.procesos):
-        reporte_text = font.render(
-            f"Proceso {p.id} - Tiempo de Espera: {p.tiempo_espera} - Tiempo de Retorno: {p.tiempo_retorno}",
-            True,
-            BLACK,
-        )
-        screen.blit(reporte_text, (60, y_offset + idx * 30))
+        y_pos = y_start + header_height + idx * row_height
+        data = [f"P{p.id}", f"{p.tiempo_espera}", f"{p.tiempo_retorno}"]
+
+        for j, datum in enumerate(data):
+            pygame.draw.rect(
+                screen, WHITE, (x_start + sum(col_widths[:j]), y_pos, col_widths[j], row_height)
+            )
+            data_text = font.render(datum, True, BLACK)
+            screen.blit(
+                data_text,
+                (
+                    x_start + sum(col_widths[:j]) + (col_widths[j] - data_text.get_width()) // 2,
+                    y_pos + (row_height - data_text.get_height()) // 2,
+                ),
+            )
+        
         tiempo_espera_promedio += p.tiempo_espera
         tiempo_retorno_promedio += p.tiempo_retorno
 
-    # Mostrar promedios
-    y_offset += len(simulador.carga.procesos) * 30 + 20
+    # Dibujar líneas de la tabla
+    num_filas = len(simulador.carga.procesos) + 1
+    for i in range(num_filas + 1):
+        pygame.draw.line(
+            screen, BLACK, 
+            (x_start, y_start + header_height + i * row_height),
+            (x_start + sum(col_widths), y_start + header_height + i * row_height),
+            1
+        )
+    for i in range(len(col_widths) + 1):
+        pygame.draw.line(
+            screen, BLACK,
+            (x_start + sum(col_widths[:i]), y_start),
+            (x_start + sum(col_widths[:i]), y_start + header_height + num_filas * row_height),
+            1
+        )
+
+    # Mostrar promedios y rendimiento
+        # Calcular posición para las métricas
+    y_offset = y_start + header_height + len(simulador.carga.procesos) * row_height + 20 + 200
+    
+    # Texto de promedios y rendimiento
     promedio_espera_text = font.render(
         f"Tiempo de espera promedio: {tiempo_espera_promedio / len(simulador.carga.procesos):.2f}",
         True,
@@ -286,9 +342,11 @@ def dibujar_reporte_final(screen, simulador):
         True,
         BLACK,
     )
-    screen.blit(promedio_espera_text, (60, y_offset))
-    screen.blit(promedio_retorno_text, (60, y_offset + 30))
-    screen.blit(rendimiento_text, (60, y_offset + 60))
+
+    # Renderizar en pantalla
+    screen.blit(promedio_espera_text, (x_start, y_offset))
+    screen.blit(promedio_retorno_text, (x_start, y_offset + 30))
+    screen.blit(rendimiento_text, (x_start, y_offset + 60))
 
     pygame.display.flip()
     
