@@ -87,7 +87,7 @@ def abrir_archivo():
 def mostrar_error(screen, mensaje):
     """Muestra un mensaje de error en la pantalla y un botón para reiniciar."""
     screen.fill(WHITE)  # Limpiar pantalla
-    error_rect = pygame.Rect(WIDTH // 2 - 200, HEIGHT // 2 - 50, 400, 100)
+    error_rect = pygame.Rect(WIDTH // 2 - 300, HEIGHT // 2 - 50, 650, 100)
     pygame.draw.rect(screen, RED, error_rect)
     pygame.draw.rect(screen, BLACK, error_rect, 2)  # Borde negro
 
@@ -371,7 +371,7 @@ def main():
 
     # Configurar el fondo y título inicial
     screen.fill(CAFE)  # Fondo oscuro
-    logo = pygame.image.load("../Archivos/logo.png")
+    logo = pygame.image.load("Archivos/logo.png")
     title_text = title_font.render("Simulador de Procesos - Cafe Colombiano", True, WHITE)
     title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
     logo = pygame.transform.scale(logo,(250,200))
