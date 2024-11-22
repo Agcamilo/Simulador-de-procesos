@@ -11,6 +11,14 @@ d1 = dict (
 
 class Proceso:
     def __init__(self, id: int, ta:int , ti:int,memoria: int):
+        if ti <= 0:
+            raise ValueError(f"El tiempo de irrupción (ti) debe ser mayor a 0. Proceso ID: {id}")
+        if ta < 0:
+            raise ValueError(f"El tiempo de arribo (ta) debe ser mayor o igual a 0. Proceso ID: {id}")
+        if memoria < 0:
+            raise ValueError(f"Memoria Negativa? ._. . Proceso ID: {id}")
+        if memoria == 0:
+            raise ValueError(f"Memoria Nula? ._.  Proceso ID: {id}")
         self.id = id
         self.memoria = memoria
         self.estado = d1["NUEVO"]
