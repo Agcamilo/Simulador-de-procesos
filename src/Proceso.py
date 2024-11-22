@@ -12,15 +12,22 @@ d1 = dict (
 
 class Proceso:
     def __init__(self, id: int, ta:int , ti:int,memoria: int):
+        if ti <= 0:
+            raise ValueError(f"El tiempo de irrupción (ti) debe ser mayor a 0. Proceso ID: {id}")
+        if ta < 0:
+            raise ValueError(f"El tiempo de arribo (ta) debe ser mayor o igual a 0. Proceso ID: {id}")
+        if memoria < 0:
+            raise ValueError(f"Memoria Negativa? ._. . Proceso ID: {id}")
+        if memoria == 0:
+            raise ValueError(f"Memoria Nula? ._.  Proceso ID: {id}")
         self.id = id
         self.memoria = memoria
         self.estado = d1["NUEVO"]
         self.tiempo_arribo = ta
         self.tiempo_irrupcion = ti
         self.tiempo_ejecutando:int = 0 #Tiempo que lleva en la CPU
-        self.tiempo_retorno:int  = -1 #Tiempo que tarda en ejecutarse
-        self.tiempo_espera:int  = -1 #Tiempo que tarda en llegar a la CPU (se encuentra en cola de listos)
-   
+        self.tiempo_retorno:int  = 0 #Tiempo que tarda en ejecutarse
+        self.tiempo_espera:int  = 0 #Tiempo que tarda en llegar a la CPU (se encuentra en cola de listos)
     def proceso_ejecutando(self):
         #Incrementa el tiempo de ejecución y de retorno del proceso en cada instante de tiempo
         self.tiempo_ejecutando += 1
@@ -30,7 +37,9 @@ class Proceso:
         #Incrementa el tiempo de espera del proceso en cada instante de tiempo
         self.tiempo_espera += 1
         self.tiempo_retorno += 1
-        
+    
+
+
     def mostrar_progreso (self):
         # Muestra el progreso del proceso en la CPU
         return self.tiempo_ejecutando / self.tiempo_irrupcion * 100
