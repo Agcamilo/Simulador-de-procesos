@@ -87,7 +87,7 @@ def abrir_archivo():
 def mostrar_error(screen, mensaje):
     """Muestra un mensaje de error en la pantalla y un botón para reiniciar."""
     screen.fill(WHITE)  # Limpiar pantalla
-    error_rect = pygame.Rect(WIDTH // 2 - 300, HEIGHT // 2 - 50, 650, 100)
+    error_rect = pygame.Rect(WIDTH // 2 - 300, HEIGHT // 2 - 50, 700, 100)
     pygame.draw.rect(screen, RED, error_rect)
     pygame.draw.rect(screen, BLACK, error_rect, 2)  # Borde negro
 
