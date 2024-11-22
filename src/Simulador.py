@@ -73,6 +73,7 @@ class Simulador:
                             part_principal.proceso = part_secundaria.proceso
                             part_principal.proceso.estado = d1["LISTO"]
                             self.cola_suspendidos.remove(part_secundaria.proceso)
+                            
                             self.cola_listos.append(part_principal.proceso)
                             self.memoria_secundaria.remove(part_secundaria)
                             print(f"Proceso {part_principal.proceso.id} movido de memoria secundaria a principal.")
@@ -99,10 +100,12 @@ class Simulador:
             self.cola_suspendidos.append(proceso)
             if (nueva_particion.proceso in self.cola_nuevos):
                 self.cola_nuevos.remove(nueva_particion.proceso)
+                proceso.proceso_listo()
             #print(f"Proceso {proceso.id} admitido en memoria secundaria.")
         else:
             #print(f"Proceso {proceso.id} rechazado por falta de espacio en memoria.")
             self.cola_nuevos.add(proceso)
+            
 
     def terminar_procesos(self):
         """Libera memoria principal y mueve un proceso de memoria secundaria."""
@@ -151,10 +154,7 @@ class Simulador:
         for proceso in self.cola_listos:
             proceso.proceso_listo()
 
-        for proceso in self.cola_suspendidos:
-            proceso.proceso_listo()
-
-      
+        
 
         if self.ejecutando:
             # Se notifica al proceso en EJECUTANDO que avanzó otro instante de tiempo.
@@ -168,6 +168,9 @@ class Simulador:
                 self.asignar_cpu()
         else:
             self.asignar_cpu()
+
+        for proceso in self.cola_suspendidos:
+            proceso.proceso_listo()
 
     def mostrar_estado(self):
         """Imprime el estado del simulador en un formato más sencillo con campo:valor."""
