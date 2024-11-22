@@ -371,7 +371,7 @@ def main():
 
     # Configurar el fondo y título inicial
     screen.fill(CAFE)  # Fondo oscuro
-    logo = pygame.image.load("Archivos/logo.png")
+    logo = pygame.image.load("../Archivos/logo.png")
     title_text = title_font.render("Simulador de Procesos - Cafe Colombiano", True, WHITE)
     title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
     logo = pygame.transform.scale(logo,(250,200))
